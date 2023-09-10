@@ -1,0 +1,30 @@
+class PodcastRSS(BaseModel):
+    name = models.CharField(max_length=25, unique=True)
+    url = models.URLField()
+
+    # RSS Main fields
+    title = models.CharField(max_length=50)
+    email = models.EmailField()
+    owner = models.CharField(max_length=50)
+
+    summary = models.TextField(blank=True, null=True)
+    image = models.CharField(max_length=300, null=True)      # URLField
+    host = models.CharField(max_length=50, null=True)
+    keywords = models.CharField(max_length=150, null=True, blank=True)
+    explicit = models.CharField(max_length=100, null=True)   # Boolean field
+    copyright = models.CharField(max_length=100, null=True)
+    language = models.CharField(max_length=25, null=True)
+    link = models.URLField(null=True)
+
+    # Main fields xml path
+    main_fields_path = models.ForeignKey(PodcastRSSPaths, on_delete=models.CASCADE)
+    # Episode fields xml path
+    episode_attributes_path = models.ForeignKey(PodcastEpisodePaths, models.CASCADE)
+
+
+    def save(self, **kwargs):
+        parser = RSSXMLParser(self)
+        parser.fill_rss()
+        return super().save()
+
+
