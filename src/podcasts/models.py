@@ -28,3 +28,20 @@ class PodcastRSS(BaseModel):
         return super().save()
 
 
+
+
+class PodcastEpisode(BaseModel):
+    rss = models.ForeignKey(PodcastRSS, on_delete=models.CASCADE)
+    # Required fields
+    title = models.CharField(max_length=75)
+    duration = models.CharField(max_length=25)
+    audio_file = models.CharField(max_length=300)     # URLField
+    publish_date = models.CharField(max_length=100)   # DatetimeField
+    # Optional fields
+    explicit = models.CharField(max_length=100, null=True)   # Boolean field
+    summary = models.TextField(null=True,blank=True)
+    description = models.TextField(null=True,blank=True)
+    guests = models.CharField(max_length=100, null=True, blank=True)
+    keywords = models.CharField(max_length=150, null=True, blank=True)
+    image = models.CharField(max_length=300, null=True)      # URLField
+    # guid
