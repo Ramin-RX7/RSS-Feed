@@ -54,3 +54,25 @@ class RSSXMLParser:
 
 
 
+
+class EpisodeXMLParser:
+    def __init__(self, rss_object, episode_model:type):
+        self.rss_object = rss_object
+        self.episode_model = episode_model
+        self.episode_paths = rss_object.episode_attributes_path
+
+
+    def create_new_episode(self, new_episode_item:dict):
+
+        episode = self.episode_model(rss=self.rss_object)
+
+        for field in self.episode_paths._meta.fields:
+
+            elements_route = getattr(self.episode_paths, field).split(" ")
+
+            obj = new_episode_item
+            while elements_route:
+                obj = obj[elements_route.pop(0)]
+
+            setattr(episode, field, obj)
+        return episode.save()
