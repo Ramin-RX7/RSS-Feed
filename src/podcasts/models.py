@@ -1,3 +1,21 @@
+class PodcastRSSPaths(models.Model):
+    title = models.CharField(max_length=100)
+    email = models.CharField(max_length=100)
+    owner = models.CharField(max_length=100)
+
+    summary = models.CharField(max_length=100, null=True, blank=True)
+    image = models.CharField(max_length=100, null=True, blank=True)
+    host = models.CharField(max_length=100, null=True, blank=True)
+    keywords = models.CharField(max_length=100, null=True, blank=True)
+    explicit = models.CharField(max_length=100, null=True, blank=True)
+    copyright = models.CharField(max_length=100, null=True, blank=True)
+    language = models.CharField(max_length=100, null=True, blank=True)
+    link = models.CharField(max_length=100, null=True, blank=True)
+
+
+
+
+
 class PodcastRSS(BaseModel):
     name = models.CharField(max_length=25, unique=True)
     url = models.URLField()
