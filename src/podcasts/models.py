@@ -14,12 +14,12 @@ class PodcastEpisodePaths(models.Model):
     audio_file = models.CharField(max_length=100)
     publish_date = models.CharField(max_length=100)
 
-    explicit = models.CharField(max_length=100)
-    summary = models.CharField(max_length=100)
-    description = models.CharField(max_length=100)
-    guests = models.CharField(max_length=100)
-    keywords = models.CharField(max_length=100)
-    image = models.CharField(max_length=100)
+    explicit = models.CharField(max_length=100, null=True, blank=True)
+    summary = models.CharField(max_length=100, null=True, blank=True)
+    description = models.CharField(max_length=100, null=True, blank=True)
+    guests = models.CharField(max_length=100, null=True, blank=True)
+    keywords = models.CharField(max_length=100, null=True, blank=True)
+    image = models.CharField(max_length=100, null=True, blank=True)
 
 
 
