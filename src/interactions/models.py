@@ -18,3 +18,7 @@ class Like(models.Model):
     episode = models.ForeignKey(PodcastEpisode)
 
 
+class Comment(BaseModel):
+    user = models.ForeignKey(User)
+    episode = models.ForeignKey(PodcastEpisode)
+    content = models.CharField(max_length=150)
