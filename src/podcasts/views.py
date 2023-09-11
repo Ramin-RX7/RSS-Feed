@@ -28,3 +28,9 @@ class PodcastView(generics.RetrieveAPIView):
 
 
 
+
+class PodcastEpisodeListView(EpisodeListView):
+    model = PodcastEpisode
+    serializer_class = PodcastEpisodeSerializer
+
+
