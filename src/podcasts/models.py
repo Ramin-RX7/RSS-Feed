@@ -39,12 +39,7 @@ class PodcastRSSPaths(models.Model):
 
 
 
-
-
-class PodcastRSS(BaseModel):
-    name = models.CharField(max_length=25, unique=True)
-    url = models.URLField()
-
+class PodcastMainFields(models.Model):
     # RSS Main fields
     title = models.CharField(max_length=50)
     email = models.EmailField()
@@ -59,6 +54,13 @@ class PodcastRSS(BaseModel):
     language = models.CharField(max_length=25, null=True)
     link = models.URLField(null=True)
 
+
+
+class PodcastRSS(BaseModel):
+    name = models.CharField(max_length=25, unique=True)
+    url = models.URLField()
+    # Main fields
+    main_fields = models.OneToOneField(PodcastMainFields, models.PROTECT)
     # Main fields xml path
     main_fields_path = models.ForeignKey(PodcastRSSPaths, on_delete=models.CASCADE)
     # Episode fields xml path
@@ -66,7 +68,7 @@ class PodcastRSS(BaseModel):
 
 
     def save(self, **kwargs):
-        parser = RSSXMLParser(self)
+        parser = RSSXMLParser(self, PodcastMainFields)
         parser.fill_rss()
         return super().save()
 
