@@ -34,3 +34,6 @@ class PodcastEpisodeListView(EpisodeListView):
     serializer_class = PodcastEpisodeSerializer
 
 
+class PodcastEpisodeDetailView(EpisodeDetailView):
+    queryset = PodcastEpisode.objects.all()
+    serializer_class = PodcastEpisodeSerializer
