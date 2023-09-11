@@ -7,11 +7,9 @@ from core.parser import *
 
 
 class PodcastEpisodePaths(models.Model):
-    audio_file_path = models.CharField(max_length=100)
-    duration_path = models.CharField(max_length=100)
-    title_path = models.CharField(max_length=100)
-    duration = models.CharField(max_length=100)
     audio_file = models.CharField(max_length=100)
+    duration = models.CharField(max_length=100)
+    title = models.CharField(max_length=100)
     publish_date = models.CharField(max_length=100)
 
     explicit = models.CharField(max_length=100, null=True, blank=True)
