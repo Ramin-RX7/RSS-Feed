@@ -22,3 +22,9 @@ class PodcastListView(generics.ListAPIView):
     queryset = PodcastRSS.objects.all()
     serializer_class = PodcastRSSSerializer
 
+class PodcastView(generics.RetrieveAPIView):
+    queryset = PodcastRSS.objects.all()
+    serializer_class = PodcastRSSSerializer
+
+
+
