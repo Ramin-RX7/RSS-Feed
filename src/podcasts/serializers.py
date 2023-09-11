@@ -43,3 +43,13 @@ class PodcastRSSSerializer(ModelSerializer):
 
 
 
+
+class PodcastEpisodeSerializer(ModelSerializer):
+    class Meta:
+        model = PodcastEpisode
+        exclude = (
+            "id",
+            "rss",
+            "created_at",
+            "updated_at",
+        )
