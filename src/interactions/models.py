@@ -13,3 +13,8 @@ class Subscribe(BaseModel):
 
 
 
+class Like(models.Model):
+    user = models.ForeignKey(User)
+    episode = models.ForeignKey(PodcastEpisode)
+
+
