@@ -13,3 +13,19 @@ class EpisodeListView(generics.ListAPIView):
         queryset = self.model.objects.filter(rss__id=rss_id)
         return queryset
 
+
+
+class EpisodeDetailView(generics.RetrieveAPIView):
+    model = None
+
+    @property
+    def queryset(self):
+        return self.model.objects.all()
+
+    def get_object(self):
+        rss_id = self.kwargs['rss_pk']
+        queryset = self.queryset.filter(rss__id=rss_id)
+        episode_nom = self.kwargs['episode_nom']
+        if 0 <= episode_nom < queryset.count():
+            return queryset[episode_nom]
+        raise Http404("Episode not found.")
