@@ -13,3 +13,16 @@ def _generate_payload(username):
         'jti': uuid4().hex,
     }
 
+def _generate_refresh_token(base_payload):
+    return {
+        "token_type":"access",
+        "exp":REFRESH_TOKEN_EXPIRY,
+        **base_payload
+    }
+
+def _generate_access_token(base_payload):
+    return {
+        "token_type":"access",
+        "exp":ACCESS_TOKEN_EXPIRY,
+        **base_payload
+    }
