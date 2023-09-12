@@ -36,3 +36,9 @@ def generate_tokens(username):
     return (encode_payload(access_payload), encode_payload(refresh_payload))
 
 
+def encode_payload(payload):
+    return jwt.encode(payload, SECRET_KEY, algorithm=ENCRYPTION)
+
+
+def decode_jwt(token): # jwt.exceptions.DecodeError
+    return jwt.decode(token, SECRET_KEY, algorithms=[ENCRYPTION])
