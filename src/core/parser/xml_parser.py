@@ -25,9 +25,10 @@ def get_rss_main_content(rss_object):
 
 
 class RSSXMLParser:
-    def __init__(self, rss_object):
+    def __init__(self, rss_object, main_fields_model):
         self.rss_object = rss_object
         self.rss_path_object = rss_object.main_fields_path
+        self.main_fields_model = main_fields_model
 
 
     def fill_rss(self):
@@ -35,12 +36,16 @@ class RSSXMLParser:
         main_content = get_rss_main_content(self.rss_object)
         rss = self.rss_object
         paths = self.rss_path_object
+        main_fields = self.main_fields_model()
 
         for field in self.rss_path_object._meta.fields:
             field_name = field.name
 
             try:
-                route:list = getattr(paths, field_name).split(" ")
+                if attr:=getattr(paths, field_name):
+                    route:list = attr.split(" ")
+                else:
+                    continue
             except (TypeError,AttributeError):
                 continue
 
@@ -48,7 +53,10 @@ class RSSXMLParser:
             while route:
                 c = c[route.pop(0)]
 
-            setattr(self.rss_object, field_name, c)
+            setattr(rss, field_name, c)
+
+        main_fields.save()
+        rss.main_fields = main_fields
 
         return rss
 
