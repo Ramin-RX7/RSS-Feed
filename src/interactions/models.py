@@ -8,17 +8,17 @@ from podcasts.models import PodcastRSS,PodcastEpisode
 
 
 class Subscribe(BaseModel):
-    user = models.ForeignKey(User)
-    rss = models.ForeignKey(PodcastRSS)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rss = models.ForeignKey(PodcastRSS, on_delete=models.CASCADE)
 
 
 
 class Like(models.Model):
-    user = models.ForeignKey(User)
-    episode = models.ForeignKey(PodcastEpisode)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    episode = models.ForeignKey(PodcastEpisode, on_delete=models.CASCADE)
 
 
 class Comment(BaseModel):
-    user = models.ForeignKey(User)
-    episode = models.ForeignKey(PodcastEpisode)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    episode = models.ForeignKey(PodcastEpisode, on_delete=models.CASCADE)
     content = models.CharField(max_length=150)
