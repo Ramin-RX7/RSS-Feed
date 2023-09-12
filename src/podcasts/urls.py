@@ -1,7 +1,7 @@
-from django.urls import path
+from django.urls import path,re_path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import test,PodcastListView,PodcastDetailView,PodcastEpisodeListView,PodcastEpisodeDetailView
+from .views import *
 
 
 
@@ -13,4 +13,9 @@ urlpatterns = format_suffix_patterns([
 
     path('podcast/<int:rss_pk>/episodes/', PodcastEpisodeListView.as_view()),
     path('podcast/<int:rss_pk>/episode/<int:episode_nom>', PodcastEpisodeDetailView.as_view()),
+
+    path('podcast/<int:rss_pk>/episodes/create/<int:episode_nom>', create_new_episode),
+
+    # re_path(r'podcast/test/(?P<pk>\d*)', PodcastTest.as_view(),),
+    # re_path(r'podcast/test/(?P<episode_nom>\d*)', PodcastTest.as_view(),),
 ])
