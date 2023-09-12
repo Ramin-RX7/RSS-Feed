@@ -26,3 +26,13 @@ def _generate_access_token(base_payload):
         "exp":ACCESS_TOKEN_EXPIRY,
         **base_payload
     }
+
+
+
+def generate_tokens(username):
+    base_payload = _generate_payload(username)
+    access_payload = _generate_access_token(base_payload)
+    refresh_payload = _generate_refresh_token(base_payload)
+    return (encode_payload(access_payload), encode_payload(refresh_payload))
+
+
