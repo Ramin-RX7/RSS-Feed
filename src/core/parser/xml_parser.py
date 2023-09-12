@@ -1,6 +1,6 @@
 import requests
 
-from core import xmltodict
+from core.lib import xmltodict
 
 
 
