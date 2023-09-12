@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     "core",
     "accounts",
+    "interactions",
     "podcasts",
 ]
 
