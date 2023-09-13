@@ -8,14 +8,14 @@ from .config import *
 
 def _generate_payload(username):
     return {
-        'user_identifier': username,
+        'username': username,
         'iat': datetime.datetime.utcnow(),
         'jti': uuid4().hex,
     }
 
 def _generate_refresh_token(base_payload):
     return {
-        "token_type":"access",
+        "token_type":"refresh",
         "exp":REFRESH_TOKEN_EXPIRY,
         **base_payload
     }
