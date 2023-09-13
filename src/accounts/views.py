@@ -60,3 +60,12 @@ class UserLoginView(APIView):
         return user_agent
 
 
+
+
+class JWTAuthTestView(APIView):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({"message": "hi"}, status=status.HTTP_205_RESET_CONTENT)
+
