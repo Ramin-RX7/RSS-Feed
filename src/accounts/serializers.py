@@ -21,6 +21,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords don't match")
         return data
 
+    def save(self):
+        instance = super().save()
+        instance.set_password(self.validated_data["password"])
+        instance.save()
+        return instance
+
+
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
