@@ -3,6 +3,7 @@ from . import views
 
 
 urlpatterns = [
-    path('login/', views.UserLogin.as_view(), name='login'),
-    path('register/', views.UserRegister.as_view(), name='register'),
+    path('login/', views.UserLoginView.as_view(), name='login'),
+    path('register/', views.UserRegisterView.as_view(), name='register'),
+    path('hi/', views.JWTAuthTestView.as_view(), name='jwt-auth-test'),
 ]
