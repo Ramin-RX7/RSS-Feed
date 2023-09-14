@@ -136,6 +136,16 @@ class RefreshToken(APIView):
 
 
 class LogoutView(APIView):
+    """
+    Logout api end-point.
+
+    Only accepts requests containing the access token in the request data
+
+    Response Schema:
+    ```
+        {}
+    ```
+    """
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
 
@@ -145,7 +155,7 @@ class LogoutView(APIView):
             user = User.objects.get(username=request.auth.get("username"))
             print(jti, user)
             auth_cache.delete(f"{user.id}|{jti}")
-            return Response({"message": "Successful Logout"}, status=status.HTTP_205_RESET_CONTENT)
+            return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -157,4 +167,3 @@ class JWTAuthTestView(APIView):
 
     def get(self, request):
         return Response({"message": "hi"}, status=status.HTTP_205_RESET_CONTENT)
-
