@@ -51,3 +51,73 @@ def parse_pubdate(text):
 
     print('Cannot parse date: %s', repr(text))
     return 0
+
+
+def parse_time(value):
+    """Parse a time string into seconds
+
+    See RFC2326, 3.6 "Normal Play Time" (HH:MM:SS.FRACT)
+
+    >>> parse_time('0')
+    0
+    >>> parse_time('128')
+    128
+    >>> parse_time('00:00')
+    0
+    >>> parse_time('00:00:00')
+    0
+    >>> parse_time('00:20')
+    20
+    >>> parse_time('00:00:20')
+    20
+    >>> parse_time('01:00:00')
+    3600
+    >>> parse_time(' 03:02:01')
+    10921
+    >>> parse_time('61:08')
+    3668
+    >>> parse_time('25:03:30 ')
+    90210
+    >>> parse_time('25:3:30')
+    90210
+    >>> parse_time('61.08')
+    61
+    >>> parse_time('01:02:03.500')
+    3723
+    >>> parse_time(' ')
+    0
+    """
+    value = value.strip()
+
+    if value == '':
+        return 0
+
+    hours = minutes = seconds = fraction = 0
+    parsed = False
+
+    m = re.match(r'(\d+)[:](\d\d?)[:](\d\d?)([.]\d+)?$', value)
+    if not parsed and m:
+        hours, minutes, seconds, fraction = m.groups()
+        fraction = float(fraction or 0.0)
+        parsed = True
+
+    m = re.match(r'(\d+)[:](\d\d?)([.]\d+)?$', value)
+    if not parsed and m:
+        minutes, seconds, fraction = m.groups()
+        fraction = float(fraction or 0.0)
+        parsed = True
+
+    m = re.match(r'(\d+)([.]\d+)?$', value)
+    if not parsed and m:
+        seconds, fraction = m.groups()
+        fraction = float(fraction or 0.0)
+        parsed = True
+
+    if not parsed:
+        try:
+            seconds = int(value)
+        except ValueError:
+            return 0
+
+    return (int(hours) * 60 + int(minutes)) * 60 + int(seconds)
+
