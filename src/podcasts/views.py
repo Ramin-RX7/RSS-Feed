@@ -83,8 +83,37 @@ class PodcastDetailView(generics.RetrieveAPIView):
 
 
 class PodcastEpisodeListView(EpisodeListView):
+    """
+    List Podcast Episodes.
+
+    Args:
+        podcast_id (int): The primary key of the podcast for which to list episodes.
+
+    Returns:
+        Response: A JSON response containing a list of podcast episodes.
+
+    Response Schema:
+    ```
+        [
+            {
+                "title": str,
+                "duration": str,
+                "audio_file": str,
+                "publish_date": str,
+                "explicit": bool,
+                "summary": str,
+                "description": str,
+                "guests": [str, ...],
+                "keywords": [str, ...],
+                "image": str
+            },
+            ...
+        ]
+    ```
+    """
     model = PodcastEpisode
     serializer_class = PodcastEpisodeSerializer
+
 
 
 class PodcastEpisodeDetailView(EpisodeDetailView):
