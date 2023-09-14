@@ -74,7 +74,7 @@ class JWTAuthBackend(BaseAuthentication):
         user_redis_jti = auth_cache.get(f"{user.id}|{jti}")
         if user_redis_jti is None:
             raise exceptions.PermissionDenied(
-                'No refresh token Found, please login again.')
+                'Not Found in cache, login again.')
         if user_redis_jti != agent:
             raise exceptions.PermissionDenied(
                 'Invalid refresh token, please login again.')
