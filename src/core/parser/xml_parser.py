@@ -73,10 +73,18 @@ class EpisodeXMLParser:
             setattr(episode, field.name, obj)
         return episode
 
-    def parse_all_episodes(self):
-        episode_items = get_rss_episodes(self.rss_object)
+
+    def _create_episode_bulk(self, episode_objects:list):
+        self.episode_model.objects.bulk_create(episode_objects)
+
+    def parse_multiple_episodes(self, episode_items:list[dict]) -> list:
         episode_objects = []
         for item in episode_items:
             episode = self.create_new_episode(item)
             episode_objects.append(episode)
-        self.episode_model.objects.bulk_create(episode_objects)
+        return episode_objects
+
+    def create_all_episodes(self):
+        all_episode_items = get_rss_episodes(self.rss_object)
+        episode_objects = self.parse_multiple_episodes(all_episode_items)
+        self._create_episode_bulk(episode_objects)
