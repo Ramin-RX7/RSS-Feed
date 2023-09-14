@@ -10,6 +10,9 @@ class RSSXMLParser:
         self.rss_path_object = rss_object.main_fields_path
         self.main_fields = main_fields_model()
 
+    @classmethod
+    def update_init(cls, rss_object):
+        return cls(rss_object, lambda x:rss_object.main_fields)
 
 
     def fill_rss(self):
