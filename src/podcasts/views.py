@@ -117,8 +117,34 @@ class PodcastEpisodeListView(EpisodeListView):
 
 
 class PodcastEpisodeDetailView(EpisodeDetailView):
+    """
+    Retrieve Podcast Episode Details.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        podcast_id (int): The primary key of the podcast.
+        episode_number (int): The episode number to retrieve details for.
+
+    Returns:
+        Response: A JSON response containing details of the podcast episode.
+
+    Response Schema:
+        {
+            "title": str,
+            "duration": str,
+            "audio_file": str,
+            "publish_date": str,
+            "explicit": bool,
+            "summary": str,
+            "description": str,
+            "guests": [str, ...],
+            "keywords": [str, ...],
+            "image": str
+        }
+    """
     queryset = PodcastEpisode.objects.all()
     serializer_class = PodcastEpisodeSerializer
+
 
 
 
