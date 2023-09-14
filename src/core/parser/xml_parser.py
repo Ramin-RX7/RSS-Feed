@@ -1,5 +1,7 @@
 import requests
 
+from django.db.models import Model
+
 from core.lib import xmltodict
 
 
@@ -67,7 +69,7 @@ class RSSXMLParser:
 
 
 class EpisodeXMLParser:
-    def __init__(self, rss_object, episode_model:type):
+    def __init__(self, rss_object, episode_model:Model):
         self.rss_object = rss_object
         self.episode_model = episode_model
         self.episode_paths = rss_object.episode_attributes_path
