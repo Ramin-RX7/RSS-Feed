@@ -52,6 +52,32 @@ class UserLoginView(APIView):
 
 
 
+class RefreshToken(APIView):
+    # permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        try:
+            JWTAuthBackend().authenticate(request)
+        except:
+            pass
+        else:
+            return Response({"message":"already authenticated"})
+
+        refresh_token = request.data.get('refresh_token')
+        auth = JWTAuthBackend()
+        jti,access_token,refresh_token = auth.get_new_tokens(request)
+
+        payload = decode_jwt(refresh_token)
+        _save_cache(auth._get_user(payload), jti, auth._get_user_agent(request.headers))
+        # _save_cache(request.auth["username"], jti, request.headers["user-agent"])
+
+        data = {
+            "access": access_token,
+            "refresh": refresh_token
+        }
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+
 class JWTAuthTestView(APIView):
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
