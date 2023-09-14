@@ -71,7 +71,7 @@ class PodcastRSS(BaseModel):
             rss_parser.fill_rss()
             saved = super().save()
             episode_parser = EpisodeXMLParser(self, PodcastEpisode)
-            episode_parser.parse_all_episodes()
+            episode_parser.create_all_episodes()
             return saved
         return super().save()
 
