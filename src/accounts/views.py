@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from .serializers import UserRegisterSerializer, UserLoginSerializer
 from .auth_backends import LoginAuthBackend, JWTAuthBackend
 from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent
-
+from .models import User
 
 
 auth_cache = caches["auth"]
@@ -75,6 +75,22 @@ class RefreshToken(APIView):
             "refresh": refresh_token
         }
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+
+class LogoutView(APIView):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            jti = request.auth.get("jti")
+            user = User.objects.get(username=request.auth.get("username"))
+            print(jti, user)
+            auth_cache.delete(f"{user.id}|{jti}")
+            return Response({"message": "Successful Logout"}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
