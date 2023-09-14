@@ -94,6 +94,22 @@ class UserLoginView(APIView):
 
 
 class RefreshToken(APIView):
+    """
+    Recreate the refresh and access tokens.
+
+    Only accepts requests containing the refresh token in the request data
+
+    Returns:
+        dict: A dictionary containing access and refresh token.
+
+    Response Schema:
+    ```
+        {
+            "access_token": str,
+            "refresh_token": str,
+        }
+    ```
+    """
     # permission_classes = (IsAuthenticated,)
     def post(self, request):
         try:
