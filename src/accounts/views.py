@@ -18,6 +18,28 @@ auth_cache = caches["auth"]
 
 
 class UserRegisterView(CreateAPIView):
+    """
+    User Registration end point.
+
+    Handles validation and creating a new user.
+
+    Args:
+        username (str): The desired username for the new user.
+        email (str): The email address for the new user.
+        password (str): The password for the new user.
+        password2 (str): A confirmation of the password.
+
+    Returns:
+        dict: A dictionary containing user registration data.
+
+    Response Schema:
+    ```
+        {
+            "username": str,
+            "email": str,
+        }
+    ```
+    """
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserRegisterSerializer
 
