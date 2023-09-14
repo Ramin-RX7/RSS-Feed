@@ -78,3 +78,40 @@ class JWTAuthBackend(BaseAuthentication):
         if user_redis_jti != agent:
             raise exceptions.PermissionDenied(
                 'Invalid refresh token, please login again.')
+
+
+
+
+    def get_new_tokens(self, request):
+        user_agent = self._get_user_agent(request.headers)
+
+        refresh_token = self._get_refresh_token(request)
+        payload = self._get_refresh_payload(refresh_token)
+
+        user = self._get_user(payload)
+
+        jti = payload.get('jti')
+        self._validate_cache_data(user, jti, user_agent)
+
+        self.deprecate_refresh_token(user, jti, user_agent)
+
+        return generate_tokens(user.username)
+
+
+
+    def _get_refresh_token(self, request):
+        token = request.data.get("refresh_token")
+        if token is None:
+            raise exceptions.PermissionDenied(
+                'Authentication credentials were not provided.')
+        return token
+
+    def _get_refresh_payload(self, token):
+        try:
+            return decode_jwt(token)
+        except jwt.ExpiredSignatureError:
+            raise exceptions.PermissionDenied(
+                'Expired refresh token, please login again.') from None
+
+    def deprecate_refresh_token(self, user, jti, user_agent):
+        auth_cache.delete(f"{user.id}|{jti}")
