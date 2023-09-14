@@ -19,6 +19,31 @@ def test(request):
 
 
 class PodcastListView(generics.ListAPIView):
+    """
+    List Podcasts.
+
+    A JSON response containing a list of podcasts.
+
+    Response Schema:
+    ```
+        [
+            {
+                "title": str,
+                "email": str,
+                "owner": str,
+                "summary": str,
+                "image": str,
+                "host": str,
+                "keywords": [str, ...],
+                "explicit": bool,
+                "copyright": str,
+                "language": str,
+                "link": str
+            },
+            ...
+        ]
+    ```
+    """
     queryset = PodcastRSS.objects.all()
     serializer_class = PodcastRSSSerializer
 
