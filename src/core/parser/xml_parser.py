@@ -46,7 +46,7 @@ class RSSXMLParser:
             if tag_parser:=TAG_PARSERS.get(field_name):
                 obj = tag_parser(obj)
 
-            setattr(rss, field_name, c)
+            setattr(main_fields, field_name, c)
 
         main_fields.save()
         rss.main_fields = main_fields
