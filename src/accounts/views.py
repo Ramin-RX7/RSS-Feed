@@ -93,7 +93,7 @@ class UserLoginView(APIView):
 
 
 
-class RefreshToken(APIView):
+class RefreshTokenView(APIView):
     """
     Recreate the refresh and access tokens.
 
