@@ -5,10 +5,11 @@ from .utils import *
 
 
 class RSSXMLParser:
-    def __init__(self, rss_object, main_fields_model):
+    def __init__(self, rss_object, main_fields_model:Model):
         self.rss_object = rss_object
         self.rss_path_object = rss_object.main_fields_path
-        self.main_fields_model = main_fields_model
+        self.main_fields = main_fields_model()
+
 
 
     def fill_rss(self):
@@ -16,7 +17,7 @@ class RSSXMLParser:
         main_content = get_rss_main_content(self.rss_object)
         rss = self.rss_object
         paths = self.rss_path_object
-        main_fields = self.main_fields_model()
+        main_fields = self.main_fields
 
         for field in self.rss_path_object._meta.fields:
             field_name = field.name
