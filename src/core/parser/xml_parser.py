@@ -1,34 +1,18 @@
-import requests
+from django.db.models import Model
 
-from core.lib import xmltodict
-
-
-
-
-def get_rss_content(rss_object) -> dict:
-    url = rss_object.url
-    response = requests.get(url)
-
-    o = xmltodict.parse(response.text)
-    main_content = o["rss"]["channel"]
-
-    return main_content
-
-def get_rss_main_content(rss_object):
-    full_content = get_rss_content(rss_object)
-    if full_content.get("item"):
-        full_content.pop("item")
-    return full_content
-
-
+from .utils import *
 
 
 
 class RSSXMLParser:
-    def __init__(self, rss_object, main_fields_model):
+    def __init__(self, rss_object, main_fields_model:Model):
         self.rss_object = rss_object
         self.rss_path_object = rss_object.main_fields_path
-        self.main_fields_model = main_fields_model
+        self.main_fields = main_fields_model()
+
+    @classmethod
+    def update_init(cls, rss_object):
+        return cls(rss_object, lambda x:rss_object.main_fields)
 
 
     def fill_rss(self):
@@ -36,7 +20,7 @@ class RSSXMLParser:
         main_content = get_rss_main_content(self.rss_object)
         rss = self.rss_object
         paths = self.rss_path_object
-        main_fields = self.main_fields_model()
+        main_fields = self.main_fields
 
         for field in self.rss_path_object._meta.fields:
             field_name = field.name
@@ -64,7 +48,7 @@ class RSSXMLParser:
 
 
 class EpisodeXMLParser:
-    def __init__(self, rss_object, episode_model:type):
+    def __init__(self, rss_object, episode_model:Model):
         self.rss_object = rss_object
         self.episode_model = episode_model
         self.episode_paths = rss_object.episode_attributes_path
@@ -75,12 +59,32 @@ class EpisodeXMLParser:
         episode = self.episode_model(rss=self.rss_object)
 
         for field in self.episode_paths._meta.fields:
-
-            elements_route = getattr(self.episode_paths, field).split(" ")
-
+            try:
+                if attr:=getattr(self.episode_paths, field.name):
+                    route:list = attr.split(" ")
+                else:
+                    continue
+            except (TypeError,AttributeError):
+                continue
             obj = new_episode_item
-            while elements_route:
-                obj = obj[elements_route.pop(0)]
+            while route:
+                obj = obj[route.pop(0)]
 
-            setattr(episode, field, obj)
-        return episode.save()
+            setattr(episode, field.name, obj)
+        return episode
+
+
+    def _create_episode_bulk(self, episode_objects:list):
+        self.episode_model.objects.bulk_create(episode_objects)
+
+    def parse_multiple_episodes(self, episode_items:list[dict]) -> list:
+        episode_objects = []
+        for item in episode_items:
+            episode = self.create_new_episode(item)
+            episode_objects.append(episode)
+        return episode_objects
+
+    def create_all_episodes(self):
+        all_episode_items = get_rss_episodes(self.rss_object)
+        episode_objects = self.parse_multiple_episodes(all_episode_items)
+        self._create_episode_bulk(episode_objects)

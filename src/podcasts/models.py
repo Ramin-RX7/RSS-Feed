@@ -66,8 +66,13 @@ class PodcastRSS(BaseModel):
 
 
     def save(self, **kwargs):
-        parser = RSSXMLParser(self, PodcastMainFields)
-        parser.fill_rss()
+        if not self.pk:
+            rss_parser = RSSXMLParser(self, PodcastMainFields)
+            rss_parser.fill_rss()
+            saved = super().save()
+            episode_parser = EpisodeXMLParser(self, PodcastEpisode)
+            episode_parser.create_all_episodes()
+            return saved
         return super().save()
 
 
