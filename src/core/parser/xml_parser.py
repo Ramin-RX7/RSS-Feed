@@ -80,12 +80,16 @@ class EpisodeXMLParser:
         episode = self.episode_model(rss=self.rss_object)
 
         for field in self.episode_paths._meta.fields:
-
-            elements_route = getattr(self.episode_paths, field).split(" ")
-
+            try:
+                if attr:=getattr(self.episode_paths, field.name):
+                    route:list = attr.split(" ")
+                else:
+                    continue
+            except (TypeError,AttributeError):
+                continue
             obj = new_episode_item
-            while elements_route:
-                obj = obj[elements_route.pop(0)]
+            while route:
+                obj = obj[route.pop(0)]
 
-            setattr(episode, field, obj)
-        return episode.save()
+            setattr(episode, field.name, obj)
+        return episode
