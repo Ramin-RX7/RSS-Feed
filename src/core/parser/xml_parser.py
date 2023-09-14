@@ -20,6 +20,9 @@ def get_rss_main_content(rss_object):
         full_content.pop("item")
     return full_content
 
+def get_rss_episodes(rss_object):
+    full_content = get_rss_content(rss_object)
+    return full_content.get("item")
 
 
 
