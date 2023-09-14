@@ -1,6 +1,13 @@
 from django.db.models import Model
 
 from .utils import *
+from .tag_parsers import *
+
+
+TAG_PARSERS = {
+    "duration": parse_time,
+    "publish_date": parse_pubdate,
+}
 
 
 
@@ -36,6 +43,8 @@ class RSSXMLParser:
             c = main_content.copy()
             while route:
                 c = c[route.pop(0)]
+            if tag_parser:=TAG_PARSERS.get(field_name):
+                obj = tag_parser(obj)
 
             setattr(rss, field_name, c)
 
@@ -59,8 +68,9 @@ class EpisodeXMLParser:
         episode = self.episode_model(rss=self.rss_object)
 
         for field in self.episode_paths._meta.fields:
+            field_name = field.name
             try:
-                if attr:=getattr(self.episode_paths, field.name):
+                if attr:=getattr(self.episode_paths, field_name):
                     route:list = attr.split(" ")
                 else:
                     continue
@@ -69,6 +79,8 @@ class EpisodeXMLParser:
             obj = new_episode_item
             while route:
                 obj = obj[route.pop(0)]
+            if tag_parser:=TAG_PARSERS.get(field_name):
+                obj = tag_parser(obj)
 
             setattr(episode, field.name, obj)
         return episode
