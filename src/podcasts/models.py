@@ -15,9 +15,9 @@ class PodcastEpisodePaths(models.Model):
     explicit = models.CharField(max_length=100, null=True, blank=True)
     summary = models.CharField(max_length=100, null=True, blank=True)
     description = models.CharField(max_length=100, null=True, blank=True)
-    guests = models.CharField(max_length=100, null=True, blank=True)
     keywords = models.CharField(max_length=100, null=True, blank=True)
     image = models.CharField(max_length=100, null=True, blank=True)
+    # guests = models.CharField(max_length=100, null=True, blank=True)
 
 
 
@@ -89,7 +89,7 @@ class PodcastEpisode(BaseModel):
     explicit = models.CharField(max_length=100, null=True)   # Boolean field
     summary = models.TextField(null=True,blank=True)
     description = models.TextField(null=True,blank=True)
-    guests = models.CharField(max_length=100, null=True, blank=True)
     keywords = models.CharField(max_length=150, null=True, blank=True)
     image = models.CharField(max_length=300, null=True)      # URLField
+    # guests = models.CharField(max_length=100, null=True, blank=True)
     # guid
