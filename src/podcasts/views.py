@@ -47,7 +47,35 @@ class PodcastListView(generics.ListAPIView):
     queryset = PodcastRSS.objects.all()
     serializer_class = PodcastRSSSerializer
 
+
+
 class PodcastDetailView(generics.RetrieveAPIView):
+    """
+    Retrieve Podcast Details.
+
+    Args:
+        pk (int): The primary key of the podcast to retrieve.
+
+    Returns:
+        Response: A JSON response containing the details of the specified podcast.
+
+    Response Schema:
+    ```
+        {
+            "title": str,
+            "email": str,
+            "owner": str,
+            "summary": str,
+            "image": str,
+            "host": str,
+            "keywords": [str, ...],
+            "explicit": bool,
+            "copyright": str,
+            "language": str,
+            "link": str
+        }
+    ```
+    """
     queryset = PodcastRSS.objects.all()
     serializer_class = PodcastRSSSerializer
 
