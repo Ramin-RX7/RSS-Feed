@@ -45,7 +45,26 @@ class UserRegisterView(CreateAPIView):
 
 
 class UserLoginView(APIView):
+    """
+    User Login api end point.
 
+    Serializer for user registration. Handles validation and creating a new user.
+
+    Args:
+        username (str): Username of the user.
+        password (str): Password of the user.
+
+    Returns:
+        dict: A dictionary containing access and refresh token.
+
+    Response Schema:
+    ```
+        {
+            "access_token": str,
+            "refresh_token": str,
+        }
+    ```
+    """
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserLoginSerializer
 
