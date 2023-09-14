@@ -18,12 +18,53 @@ auth_cache = caches["auth"]
 
 
 class UserRegisterView(CreateAPIView):
+    """
+    User Registration end point.
+
+    Handles validation and creating a new user.
+
+    Args:
+        username (str): The desired username for the new user.
+        email (str): The email address for the new user.
+        password (str): The password for the new user.
+        password2 (str): A confirmation of the password.
+
+    Returns:
+        dict: A dictionary containing user registration data.
+
+    Response Schema:
+    ```
+        {
+            "username": str,
+            "email": str,
+        }
+    ```
+    """
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserRegisterSerializer
 
 
 class UserLoginView(APIView):
+    """
+    User Login api end point.
 
+    Serializer for user registration. Handles validation and creating a new user.
+
+    Args:
+        username (str): Username of the user.
+        password (str): Password of the user.
+
+    Returns:
+        dict: A dictionary containing access and refresh token.
+
+    Response Schema:
+    ```
+        {
+            "access_token": str,
+            "refresh_token": str,
+        }
+    ```
+    """
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserLoginSerializer
 
@@ -52,7 +93,23 @@ class UserLoginView(APIView):
 
 
 
-class RefreshToken(APIView):
+class RefreshTokenView(APIView):
+    """
+    Recreate the refresh and access tokens.
+
+    Only accepts requests containing the refresh token in the request data
+
+    Returns:
+        dict: A dictionary containing access and refresh token.
+
+    Response Schema:
+    ```
+        {
+            "access_token": str,
+            "refresh_token": str,
+        }
+    ```
+    """
     # permission_classes = (IsAuthenticated,)
     def post(self, request):
         try:
@@ -79,6 +136,16 @@ class RefreshToken(APIView):
 
 
 class LogoutView(APIView):
+    """
+    Logout api end-point.
+
+    Only accepts requests containing the access token in the request data
+
+    Response Schema:
+    ```
+        {}
+    ```
+    """
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
 
@@ -88,7 +155,7 @@ class LogoutView(APIView):
             user = User.objects.get(username=request.auth.get("username"))
             print(jti, user)
             auth_cache.delete(f"{user.id}|{jti}")
-            return Response({"message": "Successful Logout"}, status=status.HTTP_205_RESET_CONTENT)
+            return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -100,4 +167,3 @@ class JWTAuthTestView(APIView):
 
     def get(self, request):
         return Response({"message": "hi"}, status=status.HTTP_205_RESET_CONTENT)
-

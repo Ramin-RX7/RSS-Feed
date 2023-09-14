@@ -18,16 +18,17 @@ class PodcastRSSSerializer(ModelSerializer):
 
     class Meta:
         model = PodcastRSS
-        exclude = (
-            "id",
-            "name",
-            "url",
-            "created_at",
-            "updated_at",
-            "main_fields",
-            "episode_attributes_path",
-            "main_fields_path",
-        )
+        fields = []
+        # exclude = (
+        #     "id",
+        #     "name",
+        #     "url",
+        #     "created_at",
+        #     "updated_at",
+        #     "main_fields",
+        #     "episode_attributes_path",
+        #     "main_fields_path",
+        # )
 
 
     def to_representation(self, instance):

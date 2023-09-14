@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "debug_toolbar",
+    'drf_spectacular',
 
     "core",
     "accounts",
@@ -69,6 +70,17 @@ MIDDLEWARE = [
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'My Project API',
+    'DESCRIPTION': 'My project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 
 ROOT_URLCONF = "config.urls"
