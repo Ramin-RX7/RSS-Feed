@@ -35,3 +35,26 @@ class LikeView(generics.CreateAPIView):
 
 
 
+class CommentCreateView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        episode_id = request.data.get('episode_id')
+        user = request.user
+        content = request.data.get('content')
+
+        try:
+            episode = PodcastEpisode.objects.get(pk=episode_id)
+        except PodcastEpisode.DoesNotExist:
+            return Response({"error": "Episode not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        comment_data = {'user': user.id, 'episode': episode.id, 'content': content}
+        serializer = self.get_serializer(data=comment_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
