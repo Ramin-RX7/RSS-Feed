@@ -25,4 +25,5 @@ urlpatterns = [
     path("", include("core.urls")),
     path("", include("accounts.urls")),
     path("", include("podcasts.urls")),
+    path("", include("interactions.urls")),
 ]
