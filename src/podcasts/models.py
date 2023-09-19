@@ -75,6 +75,8 @@ class PodcastRSS(BaseModel):
             return saved
         return super().save()
 
+    def __str__(self):
+        return f"{self.name} ({self.main_fields.title})"
 
 
 
@@ -93,3 +95,5 @@ class PodcastEpisode(BaseModel):
     image = models.CharField(max_length=300, null=True)      # URLField
     # guests = models.CharField(max_length=100, null=True, blank=True)
     # guid
+    def __str__(self) -> str:
+        return f"{self.rss.main_fields.title} - {self.title}"
