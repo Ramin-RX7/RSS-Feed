@@ -9,3 +9,11 @@ class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
         exclude = ("id",)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        exclude = ("id",)
+
+
