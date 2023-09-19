@@ -58,3 +58,25 @@ class CommentCreateView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+class SubscribeView(generics.CreateAPIView):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAuthenticated,)
+
+    serializer_class = SubscribeSerializer
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        rss_id = request.data.get('rss_id')
+
+        try:
+            existing_like = Subscribe.objects.get(user=user, rss=rss_id)
+            existing_like.delete()
+            return Response({'detail': 'Subscribe removed successfully.'}, status=status.HTTP_200_OK)
+        except Subscribe.DoesNotExist:
+            like_data = {'user': user.id, 'rss': rss_id}
+            serializer = self.get_serializer(data=like_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
