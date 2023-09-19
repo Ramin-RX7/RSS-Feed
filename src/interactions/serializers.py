@@ -17,3 +17,7 @@ class CommentSerializer(serializers.ModelSerializer):
         exclude = ("id",)
 
 
+class SubscribeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscribe
+        exclude = ("id",)
