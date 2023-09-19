@@ -18,7 +18,7 @@ class PodcastRSSSerializer(ModelSerializer):
 
     class Meta:
         model = PodcastRSS
-        fields = []
+        fields = ["id"]
         # exclude = (
         #     "id",
         #     "name",
@@ -49,7 +49,7 @@ class PodcastEpisodeSerializer(ModelSerializer):
     class Meta:
         model = PodcastEpisode
         exclude = (
-            "id",
+            # "id",
             "rss",
             "created_at",
             "updated_at",
