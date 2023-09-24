@@ -1,0 +1,74 @@
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:alpine3.18
+    environment:
+      - POSTGRES_DB="rssfeed"
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=asdf1234
+    networks:
+      - main
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    container_name: djangorss
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src/:/src/
+    depends_on:
+      - postgres
+    ports:
+      - 8000:8000
+    networks:
+      - main
+    restart: always
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    networks:
+      - main
+    ports:
+      - 6379:6379
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  celery:
+    restart: always
+    build: .
+    volumes:
+      - ./src/:/src/
+    command: celery -A config worker -l INFO
+    networks:
+      - main
+    # build:
+      # context: .
+    # command: celery -A app beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    # environment:
+      # DB_HOST: POSTGRES
+      # DB_NAME: rssfeed
+      # DB_USER: postgres
+      # DB_PASS: asdf1234
+    depends_on:
+      - postgres
+      - redis
+      - app
+
+
+networks:
+  main:
+
+
+
+volumes:
+  postgres_data:
+  redis_data:
