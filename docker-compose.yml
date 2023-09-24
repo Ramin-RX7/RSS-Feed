@@ -43,3 +43,22 @@ services:
       # - redis_data:/data
 
   celery:
+    restart: always
+    build: .
+    volumes:
+      - ./src/:/src/
+    command: celery -A config worker -l INFO
+    networks:
+      - main
+    # build:
+      # context: .
+    # command: celery -A app beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    # environment:
+      # DB_HOST: POSTGRES
+      # DB_NAME: rssfeed
+      # DB_USER: postgres
+      # DB_PASS: asdf1234
+    depends_on:
+      - postgres
+      - redis
+      - app
