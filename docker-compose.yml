@@ -1,0 +1,17 @@
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:alpine3.18
+    environment:
+      - POSTGRES_DB="rssfeed"
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=asdf1234
+    networks:
+      - main
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
