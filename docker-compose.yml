@@ -39,8 +39,8 @@ services:
     ports:
       - 6379:6379
     restart: always
-    # volumes:
-      # - redis_data:/data
+    volumes:
+      - redis_data:/data
 
   celery:
     restart: always
@@ -62,3 +62,13 @@ services:
       - postgres
       - redis
       - app
+
+
+networks:
+  main:
+
+
+
+volumes:
+  postgres_data:
+  redis_data:
