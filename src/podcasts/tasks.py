@@ -45,6 +45,7 @@ def update_podcast(podcast_id, retry_count=0):
             update_podcast(podcast_id, retry_count+1)
         else:
             logger.error(f'Retries exhausted for podcast: {podcast.name}. Moving on...')
+            logger.error(f'{type(e).__name__}: {e}')
 
 
 
