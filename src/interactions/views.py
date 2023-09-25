@@ -59,7 +59,7 @@ class CommentCreateView(generics.CreateAPIView):
 
 
 
-class SubscribeView(generics.CreateAPIView):
+class SubscribeView(generics.ListCreateAPIView):
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
 
@@ -80,3 +80,15 @@ class SubscribeView(generics.CreateAPIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        """
+        {
+            "podcasts": [PODCAST_ID, ]
+        }
+        """
+        # subscriptions = Subscribe.objects.filter(user=request.user)
+        # subscriptions = self.serializer_class(subscriptions, many=True)
+        # return Response({'podcasts': list(subscriptions.data)}, status=status.HTTP_200_OK)
+        subscriptions = Subscribe.objects.filter(user=request.user).values_list("id", flat=True)
+        return Response({'podcasts': list(subscriptions)}, status=status.HTTP_200_OK)
