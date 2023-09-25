@@ -1,8 +1,10 @@
+import time
 import logging
 
 from celery import shared_task, group, chord
 
 from .models import PodcastRSS
+
 
 
 logger = logging.getLogger('celery-logger')
@@ -38,7 +40,9 @@ def update_podcast(podcast_id, retry_count=0):
     except Exception as e:
         if retry_count < MAX_RETRY:
             logger.warning(f'Failed to update podcast: {podcast.name}. Retrying...')
-            raise update_podcast.retry(exc=e, countdown=(2**retry_count))
+            # raise update_podcast.retry(exc=e, countdown=(2**retry_count))
+            time.sleep(2**retry_count)
+            update_podcast(podcast_id, retry_count+1)
         else:
             logger.error(f'Retries exhausted for podcast: {podcast.name}. Moving on...')
 
