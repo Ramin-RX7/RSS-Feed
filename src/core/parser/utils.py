@@ -23,3 +23,14 @@ def get_rss_main_content(rss_object):
 def get_rss_episodes(rss_object):
     full_content = get_rss_content(rss_object)
     return full_content.get("item")
+
+
+def get_unparsed_episodes(rss_object, episodes_model):
+    db_episodes_count = episodes_model.objects.filter(rss=rss_object).count()
+    live_episodes = get_rss_episodes(rss_object)
+    live_episodes_count = len(live_episodes)
+    diff = live_episodes_count - db_episodes_count
+    if diff > 0:
+        return live_episodes[:diff]
+    else:
+        return []
