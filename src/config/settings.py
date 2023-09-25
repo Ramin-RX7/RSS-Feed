@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "debug_toolbar",
     'drf_spectacular',
+    'django_celery_beat',
 
     "core",
     "accounts",
