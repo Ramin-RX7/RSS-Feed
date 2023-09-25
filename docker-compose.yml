@@ -47,6 +47,7 @@ services:
     build: .
     volumes:
       - ./src/:/src/
+    # command: celery -A config worker -l INFO
     command: celery -A config worker -l INFO
     networks:
       - main
@@ -63,6 +64,16 @@ services:
       - redis
       - app
 
+  celerybeat:
+    restart: always
+    build: .
+    volumes:
+      - ./src/:/src/
+    command: celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    networks:
+      - main
+    depends_on:
+      - celery
 
 networks:
   main:

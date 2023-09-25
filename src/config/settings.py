@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "debug_toolbar",
     'drf_spectacular',
+    'django_celery_beat',
 
     "core",
     "accounts",
@@ -185,3 +186,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
 
+
+
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
