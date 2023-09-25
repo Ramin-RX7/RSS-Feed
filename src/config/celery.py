@@ -9,3 +9,9 @@ app = Celery("app")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 
+app.conf.beat_schedule = {
+    'update-podcasts-every-hour': {
+        'task': 'podcasts.tasks.update_podcasts_episodes',
+        'schedule': crontab(minute=1),  # Run every hour, at the start of the hour
+    },
+}
