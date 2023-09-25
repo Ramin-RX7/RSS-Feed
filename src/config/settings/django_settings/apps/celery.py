@@ -1,0 +1,5 @@
+from ...base import BASE_ENV
+
+CELERY_BROKER_URL = BASE_ENV("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = BASE_ENV("CELERY_RESULT_BACKEND")
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

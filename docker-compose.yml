@@ -1,12 +1,11 @@
 
 services:
+
   postgres:
     container_name: postgres
     image: postgres:alpine3.18
-    environment:
-      - POSTGRES_DB="rssfeed"
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=asdf1234
+    env_file:
+      - /src/.env
     networks:
       - main
     ports:
@@ -14,6 +13,7 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
 
   app:
     build: .
@@ -31,6 +31,7 @@ services:
       - main
     restart: always
 
+
   redis:
     container_name: redis
     image: redis:alpine
@@ -42,23 +43,15 @@ services:
     volumes:
       - redis_data:/data
 
+
   celery:
     restart: always
     build: .
     volumes:
       - ./src/:/src/
-    # command: celery -A config worker -l INFO
     command: celery -A config worker -l INFO
     networks:
       - main
-    # build:
-      # context: .
-    # command: celery -A app beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    # environment:
-      # DB_HOST: POSTGRES
-      # DB_NAME: rssfeed
-      # DB_USER: postgres
-      # DB_PASS: asdf1234
     depends_on:
       - postgres
       - redis
@@ -75,11 +68,15 @@ services:
     depends_on:
       - celery
 
+
+
+
 networks:
-  main:
+    main:
+
 
 
 
 volumes:
-  postgres_data:
-  redis_data:
+    postgres_data:
+    redis_data:

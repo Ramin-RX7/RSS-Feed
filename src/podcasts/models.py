@@ -65,6 +65,10 @@ class PodcastRSS(BaseModel):
     episode_attributes_path = models.ForeignKey(PodcastEpisodePaths, models.CASCADE)
 
 
+    def update_episodes(self):
+        parser = EpisodeXMLParser(self, PodcastEpisode)
+        parser.update_episodes()
+
     def save(self, **kwargs):
         if not self.pk:
             rss_parser = RSSXMLParser(self, PodcastMainFields)
