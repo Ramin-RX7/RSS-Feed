@@ -191,3 +191,33 @@ AUTH_USER_MODEL = "accounts.User"
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/0"
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+
+
+LOGGING = {
+    "version": 1,
+    'disable_existing_loggers': False,
+    "formatters": {
+        'verbose': {
+            'format': '[{levelname}] {asctime} | {message}',
+            'style': '{',
+        },
+    },
+    "handlers": {
+        'celery': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'celery.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+        },
+    },
+    "loggers": {
+        'celery-logger': {
+            'handlers': ['celery'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
