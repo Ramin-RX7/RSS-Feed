@@ -42,7 +42,7 @@ class LikeView(generics.ListCreateAPIView):
         # subscriptions = Subscribe.objects.filter(user=request.user)
         # subscriptions = self.serializer_class(subscriptions, many=True)
         # return Response({'podcasts': list(subscriptions.data)}, status=status.HTTP_200_OK)
-        subscriptions = Like.objects.filter(user=request.user).values_list("id", flat=True)
+        subscriptions = Like.objects.filter(user=request.user).values_list("episode__id", flat=True)
         return Response({'podcasts': list(subscriptions)}, status=status.HTTP_200_OK)
 
 
@@ -103,5 +103,5 @@ class SubscribeView(generics.ListCreateAPIView):
         # subscriptions = Subscribe.objects.filter(user=request.user)
         # subscriptions = self.serializer_class(subscriptions, many=True)
         # return Response({'podcasts': list(subscriptions.data)}, status=status.HTTP_200_OK)
-        subscriptions = Subscribe.objects.filter(user=request.user).values_list("id", flat=True)
+        subscriptions = Subscribe.objects.filter(user=request.user).values_list("rss__id", flat=True)
         return Response({'podcasts': list(subscriptions)}, status=status.HTTP_200_OK)
