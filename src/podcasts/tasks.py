@@ -100,3 +100,19 @@ class BaseTask(Task):
     Request = PodcastRequest
 
 
+
+@shared_task(base=BaseTask,
+             bind=True,
+             autoretry_for=(Exception,),
+             max_retries=3,
+             default_retry_delay=10,
+            )
+def update_podcast(self,podcast_id):
+    # logger.info(f"XXXXXX - {self.request.retries}")
+    podcast = PodcastRSS.objects.get(id=podcast_id)
+    podcast.update_episodes()
+    # raise ValueError("wtf")
+    # logger.info(f'Successfully updated podcast: {podcast.name}')
+
+
+
