@@ -67,3 +67,31 @@ def update_podcasts_episodes():
 # @shared_task
 # def process_parsing_results(results:list[dict[int:bool]]):
     # print(f"in pro res: {results}")
+
+class PodcastRequest(Request):
+    'A minimal custom request to log failures and hard time limits.'
+
+    def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
+        if type(exc_info.exception) != Retry:
+            error_name = type(exc_info.exception).__name__
+            message = str(exc_info.exception)
+            logger.critical(
+                f'Failed to update podcast: : "{error_name}: {message}". Failed',
+            )
+        return super().on_failure(
+            exc_info,
+            send_failed_event=send_failed_event,
+            return_ok=return_ok
+        )
+    def on_retry(self, exc_info):
+        error_name = type(exc_info.exception.exc).__name__
+        message = str(exc_info.exception.exc)
+        logger.error(
+            f'Failed to update podcast: : "{error_name}: {message}". retrying',
+        )
+        return super().on_retry(exc_info)
+    def on_success(self, failed__retval__runtime, **kwargs):
+        logger.info(kwargs)
+        logger.info("successful update")
+        return super().on_success(failed__retval__runtime, **kwargs)
+
