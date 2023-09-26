@@ -30,8 +30,9 @@ class PodcastRequest(Request):
         if type(exc_info.exception) != Retry:
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
+            podcast_id = self.kwargs["podcast_id"]
             logger.critical(
-                f'Failed to update podcast: : "{error_name}: {message}". Failed',
+                f'Failed to update podcast: id={podcast_id}: "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}"',
             )
         return super().on_failure(
             exc_info,
@@ -41,8 +42,9 @@ class PodcastRequest(Request):
     def on_retry(self, exc_info):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
+        podcast_id = self.kwargs["podcast_id"]
         logger.error(
-            f'Failed to update podcast: : "{error_name}: {message}". retrying',
+            f'Failed to update podcast: "id={podcast_id}" "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}". retrying...',
         )
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
@@ -78,7 +80,7 @@ def update_podcasts_episodes():
     logger.info("Request to update podcasts episodes")
     podcasts = PodcastRSS.objects.all()
 
-    tasks = [update_podcast.s(podcast.id) for podcast in podcasts]
+    tasks = [update_podcast.s(podcast_id=podcast.id) for podcast in podcasts]
     task_groups = divide_tasks(tasks, MAX_CONCURRENCY)
 
     initial_chain = chain()
