@@ -30,3 +30,13 @@ class ChangeForm(forms.ModelForm):
             user.save()
         return user
 
+
+class UserAddForm(BaseUserCreationForm):
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'is_staff', 'is_active','groups','user_permissions')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['first_name'].required = False
+        self.fields['last_name'].required = False
