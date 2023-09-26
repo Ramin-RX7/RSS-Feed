@@ -1,9 +1,15 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 from .models import User
+from .forms import ChangeForm,UserAddForm
+
 
 
 @admin.register(User)
-class UserAdmin(DjangoUserAdmin):
+class UserAdmin(admin.ModelAdmin):
     list_display = ["username", "created_at"]
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is not None:
+            return ChangeForm
+        return UserAddForm
