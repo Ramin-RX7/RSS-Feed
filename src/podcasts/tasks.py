@@ -49,10 +49,12 @@ def update_podcasts_episodes():
     tasks = [update_podcast.s(podcast.id) for podcast in podcasts]
     task_groups = divide_tasks(tasks, MAX_CONCURRENCY)
 
-    print(f"task_group {task_groups}")
-    # chords = [chord(task_group)(process_parsing_results.s()) for task_group in task_groups]
-    for g in task_groups: g()
+    initial_chain = chain()
+    for task_group in task_groups:
+        initial_chain = initial_chain | task_group
 
+    # result = initial_chain | process_parsing_results.s()
+    initial_chain.apply_async()
 
 
 # @shared_task
