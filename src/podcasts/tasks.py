@@ -16,20 +16,13 @@ MAX_RETRY = 4
 
 
 
-def divide_tasks(seq, n):
-    q, r = divmod(len(seq), n)
-    ret = []
-    stop = 0
-    for i in range(1, n + 1):
-        start = stop
-        stop += q + 1 if i <= r else q
-        ret.append(group(seq[start:stop]))
-    return ret
+def divide_tasks(tasks, n):
+    return [group(tasks[i:i+n]) for i in range(0, len(tasks), n)]
 
 
 
 
-# @shared_task(autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 6}, retry_jitter=True)
+
 @shared_task
 def update_podcast(podcast_id, retry_count=0):
     podcast = PodcastRSS.objects.get(id=podcast_id)
