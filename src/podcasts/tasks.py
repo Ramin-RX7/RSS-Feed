@@ -67,12 +67,13 @@ def update_podcast(self,podcast_id):
     podcast = PodcastRSS.objects.get(id=podcast_id)
     podcast.update_episodes()
     # raise ValueError("wtf")
-    # logger.info(f'Successfully updated podcast: {podcast.name}')
+    logger.info(f'Successfully updated podcast: {podcast.name}')
 
 
 
 @shared_task
 def update_podcasts_episodes():
+    logger.info("Request to update podcasts episodes")
     podcasts = PodcastRSS.objects.all()
 
     tasks = [update_podcast.s(podcast.id) for podcast in podcasts]
