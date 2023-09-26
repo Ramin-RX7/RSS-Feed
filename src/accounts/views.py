@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 
-from .serializers import UserRegisterSerializer, UserLoginSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, ChangePasswordSerializer
 from .auth_backends import LoginAuthBackend, JWTAuthBackend
 from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent
 from .models import User
@@ -161,9 +161,35 @@ class LogoutView(APIView):
 
 
 
-class JWTAuthTestView(APIView):
+class ChangePassword(APIView):
+    """
+    Returns HTTP 202 code for successfull calls and HTTP 406 for invalid calls
+    """
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
+    serializer_class = ChangePasswordSerializer
 
-    def get(self, request):
-        return Response({"message": "hi"}, status=status.HTTP_205_RESET_CONTENT)
+    def post(self, request):
+        user:User = request.user
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        if not user.check_password(data["old_password"]):
+            return Response(
+                {"detail": "invalid password"},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+        if user.check_password(data["new_password"]):
+            return Response(
+                {"detail": "new password can not be same as old password"},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+
+        user.set_password(data["new_password"])
+        user.save()
+
+        return Response(
+                {"detail": "password changed successfully"},
+                status=status.HTTP_202_ACCEPTED
+            )
