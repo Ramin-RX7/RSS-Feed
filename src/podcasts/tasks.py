@@ -95,3 +95,8 @@ class PodcastRequest(Request):
         logger.info("successful update")
         return super().on_success(failed__retval__runtime, **kwargs)
 
+
+class BaseTask(Task):
+    Request = PodcastRequest
+
+
