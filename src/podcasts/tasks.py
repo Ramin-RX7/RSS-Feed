@@ -58,5 +58,12 @@ def update_podcasts_episodes():
 
 
 # @shared_task
+# def update_podcasts_episodes():
+    # podcasts = PodcastRSS.objects.all()
+    # for podcast in podcasts:
+        # update_podcast.delay(podcast.id)
+
+
+# @shared_task
 # def process_parsing_results(results:list[dict[int:bool]]):
     # print(f"in pro res: {results}")
