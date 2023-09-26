@@ -53,17 +53,19 @@ class PodcastRequest(Request):
 
 class BaseTask(Task):
     Request = PodcastRequest
+    autoretry_for = (Exception,)
+    max_retries = 5
+    # retry_backoff_max = 32
+    # default_retry_delay = 1
+    # retry_kwargs = {'max_retries': 5}   # READMORE
+    retry_backoff = True  # 1
+    retry_jitter = False
 
 
 
-@shared_task(base=BaseTask,
-             bind=True,
-             autoretry_for=(Exception,),
-             max_retries=3,
-             default_retry_delay=10,
-            )
-def update_podcast(self,podcast_id):
-    # logger.info(f"XXXXXX - {self.request.retries}")
+@shared_task(base=BaseTask, bind=True)
+def update_podcast(self, podcast_id):
+    # logger.info(f"XXXXXX - {self.request.retries}, {podcast_id}")
     podcast = PodcastRSS.objects.get(id=podcast_id)
     podcast.update_episodes()
     # raise ValueError("wtf")
