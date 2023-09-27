@@ -16,7 +16,7 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
         validators=[username_validator, MinLengthValidator(5),MaxLengthValidator(16)],
         max_length=16
     )
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
 
     objects = UserManager()
 

@@ -1,14 +1,21 @@
+import uuid
+
 from django.core.cache import caches
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
-from .serializers import UserRegisterSerializer, UserLoginSerializer
+from .serializers import (
+    UserRegisterSerializer  ,  UserLoginSerializer,
+    ChangePasswordSerializer,  ResetPasswordSerializer,
+)
 from .auth_backends import LoginAuthBackend, JWTAuthBackend
 from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent
 from .models import User
+from .tasks import send_reset_password_email
 
 
 auth_cache = caches["auth"]
@@ -161,9 +168,71 @@ class LogoutView(APIView):
 
 
 
-class JWTAuthTestView(APIView):
+class ChangePassword(APIView):
+    """
+    Returns HTTP 202 code for successfull calls and HTTP 406 for invalid calls
+    """
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
+    serializer_class = ChangePasswordSerializer
 
-    def get(self, request):
-        return Response({"message": "hi"}, status=status.HTTP_205_RESET_CONTENT)
+    def post(self, request):
+        user:User = request.user
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        if not user.check_password(data["old_password"]):
+            return Response(
+                {"detail": "invalid password"},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+        if user.check_password(data["new_password"]):
+            return Response(
+                {"detail": "new password can not be same as old password"},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+
+        user.set_password(data["new_password"])
+        user.save()
+
+        return Response(
+                {"detail": "password changed successfully"},
+                status=status.HTTP_202_ACCEPTED
+            )
+
+
+
+class ResetPassword(viewsets.ViewSet):
+    def get(self, request, code):
+        if user:=auth_cache.get(f"reset_password_{code}"):
+            return Response({"code":code}, status=status.HTTP_202_ACCEPTED)
+        return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+
+    def post(self, request, code):
+        if self.get(request, code).status_code == 202:
+            serializer = ResetPasswordSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user_id = auth_cache.get(f"reset_password_{code}")
+            user = User.objects.get(id=user_id)   # BUG: error when user delete the account in middle of resetting password process
+            user.set_password(serializer.data["new_password"])
+            user.save()
+            auth_cache.delete(f"reset_password_{code}")
+            return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
+    @action(detail=True, methods=["POST"])
+    def reset_password_request(self, request):
+        email = request.POST.get("email")
+        if not email:
+            return Response({"detail":"email field not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.filter(email=email)
+        if user.exists():
+            user = user.get()
+            code = str(uuid.uuid4())
+            auth_cache.set(f"reset_password_{code}", user.id, timeout=60*15)
+            send_reset_password_email.delay(user.email, code)
+            return Response({"sent":"ok"}, status=status.HTTP_202_ACCEPTED)
+        return Response({"send":"not found"}, status=status.HTTP_406_NOT_ACCEPTABLE)

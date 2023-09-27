@@ -30,8 +30,9 @@ class PodcastRequest(Request):
         if type(exc_info.exception) != Retry:
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
+            podcast_id = self.kwargs["podcast_id"]
             logger.critical(
-                f'Failed to update podcast: : "{error_name}: {message}". Failed',
+                f'Failed to update podcast: id={podcast_id}: "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}"',
             )
         return super().on_failure(
             exc_info,
@@ -41,8 +42,9 @@ class PodcastRequest(Request):
     def on_retry(self, exc_info):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
+        podcast_id = self.kwargs["podcast_id"]
         logger.error(
-            f'Failed to update podcast: : "{error_name}: {message}". retrying',
+            f'Failed to update podcast: "id={podcast_id}" "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}". retrying...',
         )
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
@@ -53,29 +55,32 @@ class PodcastRequest(Request):
 
 class BaseTask(Task):
     Request = PodcastRequest
+    autoretry_for = (Exception,)
+    max_retries = 5
+    # retry_backoff_max = 32
+    # default_retry_delay = 1
+    # retry_kwargs = {'max_retries': 5}   # READMORE
+    retry_backoff = True  # 1
+    retry_jitter = False
 
 
 
-@shared_task(base=BaseTask,
-             bind=True,
-             autoretry_for=(Exception,),
-             max_retries=3,
-             default_retry_delay=10,
-            )
-def update_podcast(self,podcast_id):
-    # logger.info(f"XXXXXX - {self.request.retries}")
+@shared_task(base=BaseTask, bind=True)
+def update_podcast(self, podcast_id):
+    # logger.info(f"XXXXXX - {self.request.retries}, {podcast_id}")
     podcast = PodcastRSS.objects.get(id=podcast_id)
     podcast.update_episodes()
     # raise ValueError("wtf")
-    # logger.info(f'Successfully updated podcast: {podcast.name}')
+    logger.info(f'Successfully updated podcast: {podcast.name}')
 
 
 
 @shared_task
 def update_podcasts_episodes():
+    logger.info("Request to update podcasts episodes")
     podcasts = PodcastRSS.objects.all()
 
-    tasks = [update_podcast.s(podcast.id) for podcast in podcasts]
+    tasks = [update_podcast.s(podcast_id=podcast.id) for podcast in podcasts]
     task_groups = divide_tasks(tasks, MAX_CONCURRENCY)
 
     initial_chain = chain()
