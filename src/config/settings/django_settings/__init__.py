@@ -3,6 +3,7 @@ import pytz
 from ..base import *
 
 from .apps import *
+from .email import *
 
 
 
