@@ -217,6 +217,7 @@ class ResetPassword(viewsets.ViewSet):
             user = User.objects.get(id=user_id)   # BUG: error when user delete the account in middle of resetting password process
             user.set_password(serializer.data["new_password"])
             user.save()
+            auth_cache.delete(f"reset_password_{code}")
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
