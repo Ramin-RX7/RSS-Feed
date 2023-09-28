@@ -86,3 +86,25 @@ class RefreshTokenViewTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
+class LogoutViewTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('logout')
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        data = {'username': 'testuser', 'password': 'testpassword'}
+        response = self.client.post(reverse("login"), data, format='json', HTTP_USER_AGENT="sth")
+        self.access_token = response.data["access"]
+
+    def test_logout_with_valid_access_token(self):
+        data = {'access_token': self.access_token}
+        response = self.client.post(self.url, data, format='json', HTTP_USER_AGENT="sth",
+                                    HTTP_AUTHORIZATION=f"Token {self.access_token}")
+        self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
+        # self.assertIsNone(auth_cache.get(f"{self.user.id}|{self.access_token['jti']}"))
+
+    def test_logout_with_invalid_access_token(self):
+        invalid_token = 'invalid-token'
+        data = {'access_token': invalid_token}
+        response = self.client.post(self.url, data, format='json', HTTP_USER_AGENT="sth")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
