@@ -49,6 +49,7 @@ class LikeView(generics.ListCreateAPIView):
 
 
 class CommentCreateView(generics.CreateAPIView):
+    authentication_classes = (JWTAuthBackend,)
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
 
