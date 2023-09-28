@@ -39,16 +39,14 @@ class LikeView(generics.ListCreateAPIView):
             "episodes": [PODCAST_ID, ]
         }
         """
-        # subscriptions = Subscribe.objects.filter(user=request.user)
-        # subscriptions = self.serializer_class(subscriptions, many=True)
-        # return Response({'podcasts': list(subscriptions.data)}, status=status.HTTP_200_OK)
-        subscriptions = Like.objects.filter(user=request.user).values_list("episode__id", flat=True)
-        return Response({'podcasts': list(subscriptions)}, status=status.HTTP_200_OK)
+        episodes = Like.objects.filter(user=request.user).values_list("episode__id", flat=True)
+        return Response({'episodes': list(episodes)}, status=status.HTTP_200_OK)
 
 
 
 
 class CommentCreateView(generics.CreateAPIView):
+    authentication_classes = (JWTAuthBackend,)
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
 
