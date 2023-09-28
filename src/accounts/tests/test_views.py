@@ -35,3 +35,25 @@ class UserRegisterViewTest(TestCase):
         self.assertFalse(User.objects.filter(username='newuser').exists())
 
 
+
+class UserLoginViewTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('login')
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+
+    def test_login_with_valid_credentials(self):
+        data = {'username': 'testuser', 'password': 'testpassword'}
+        response = self.client.post(self.url, data, format='json',HTTP_USER_AGENT="sth")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+    def test_login_with_invalid_credentials(self):
+        data = {'username': 'testuser', 'password': 'wrongpassword'}
+        response = self.client.post(self.url, data, format='json',HTTP_USER_AGENT="sth")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid Credentials', str(response.data))
+
+
+
