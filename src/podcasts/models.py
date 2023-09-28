@@ -26,6 +26,7 @@ class PodcastRSSPaths(models.Model):
     email = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)
 
+    category = models.CharField(max_length=100, null=True, blank=True)
     summary = models.CharField(max_length=100, null=True, blank=True)
     image = models.CharField(max_length=100, null=True, blank=True)
     host = models.CharField(max_length=100, null=True, blank=True)
@@ -43,10 +44,11 @@ class PodcastMainFields(models.Model):
     email = models.EmailField()
     owner = models.CharField(max_length=50)
 
+    category = models.CharField(max_length=75, null=True, blank=True)
     summary = models.TextField(blank=True, null=True)
     image = models.CharField(max_length=300, null=True)      # URLField
     host = models.CharField(max_length=50, null=True)
-    keywords = models.CharField(max_length=150, null=True, blank=True)
+    keywords = models.TextField(null=True, blank=True)
     explicit = models.CharField(max_length=100, null=True)   # Boolean field
     copyright = models.CharField(max_length=100, null=True)
     language = models.CharField(max_length=25, null=True)
@@ -65,6 +67,10 @@ class PodcastRSS(BaseModel):
     episode_attributes_path = models.ForeignKey(PodcastEpisodePaths, models.CASCADE)
 
 
+    def update_episodes(self):
+        parser = EpisodeXMLParser(self, PodcastEpisode)
+        parser.update_episodes()
+
     def save(self, **kwargs):
         if not self.pk:
             rss_parser = RSSXMLParser(self, PodcastMainFields)
@@ -75,6 +81,8 @@ class PodcastRSS(BaseModel):
             return saved
         return super().save()
 
+    # def __str__(self):
+        # return f"{self.name} ({self.main_fields.title})"
 
 
 
@@ -93,3 +101,5 @@ class PodcastEpisode(BaseModel):
     image = models.CharField(max_length=300, null=True)      # URLField
     # guests = models.CharField(max_length=100, null=True, blank=True)
     # guid
+    def __str__(self) -> str:
+        return f"{self.rss.main_fields.title} - {self.title}"

@@ -2,6 +2,9 @@ from django.shortcuts import render
 from django.http import Http404
 
 from rest_framework import generics
+from rest_framework.response import Response
+
+from interactions.models import Like
 
 
 
@@ -29,3 +32,18 @@ class EpisodeDetailView(generics.RetrieveAPIView):
         if 0 <= episode_nom < queryset.count():
             return queryset[episode_nom]
         raise Http404("Episode not found.")
+
+    def get_user(self, request):
+        from accounts.auth_backends import JWTAuthBackend
+        from rest_framework import exceptions
+        try:
+            return JWTAuthBackend().authenticate(request)[0]
+        except exceptions.PermissionDenied:
+            return None
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if user:=self.get_user(request):
+            instance.liked = Like.objects.filter(user=user, episode=instance).exists()
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)

@@ -1,4 +1,7 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
+
 from .models import User
 
 
@@ -32,3 +35,40 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
+
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField(
+        validators = (validate_password,)
+    )
+    confirm_password = serializers.CharField()
+
+    def validate_new_password(self, value):
+        if 128<len(value):
+            raise ValidationError("Password must have length between 6-125")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords don't match")
+        return data
+
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(
+        validators = (validate_password,)
+    )
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        if 128<len(value):
+            raise ValidationError("Password must have length between 6-125")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords don't match")
+        return data

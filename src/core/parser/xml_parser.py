@@ -85,6 +85,11 @@ class EpisodeXMLParser:
             setattr(episode, field.name, obj)
         return episode
 
+    def update_episodes(self):
+        new_episodes = get_unparsed_episodes(self.rss_object, self.episode_model)
+        if new_episodes:
+            episodes = self.parse_multiple_episodes(new_episodes)
+            self._create_episode_bulk(episodes)
 
     def _create_episode_bulk(self, episode_objects:list):
         self.episode_model.objects.bulk_create(episode_objects)

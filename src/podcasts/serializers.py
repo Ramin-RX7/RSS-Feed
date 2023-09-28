@@ -1,24 +1,24 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 from .models import PodcastRSS,PodcastEpisode,PodcastMainFields
 
 
 
 
-class MainFieldsSerializer(ModelSerializer):
+class MainFieldsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PodcastMainFields
         exclude = ("id",)
 
 
 
-class PodcastRSSSerializer(ModelSerializer):
+class PodcastRSSSerializer(serializers.ModelSerializer):
     # main_fields = MainFieldsSerializer()
     # field1 = serializers.CharField(source='main_fields.title')
 
     class Meta:
         model = PodcastRSS
-        fields = []
+        fields = ["id"]
         # exclude = (
         #     "id",
         #     "name",
@@ -45,11 +45,12 @@ class PodcastRSSSerializer(ModelSerializer):
 
 
 
-class PodcastEpisodeSerializer(ModelSerializer):
+class PodcastEpisodeSerializer(serializers.ModelSerializer):
+    liked = serializers.BooleanField(read_only=True,required=False,default=False)
     class Meta:
         model = PodcastEpisode
         exclude = (
-            "id",
+            # "id",
             "rss",
             "created_at",
             "updated_at",
