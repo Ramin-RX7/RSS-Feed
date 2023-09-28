@@ -12,7 +12,8 @@ urlpatterns = format_suffix_patterns([
     path('podcast/<int:pk>/', PodcastDetailView.as_view()),
 
     path('podcast/<int:rss_pk>/episodes/', PodcastEpisodeListView.as_view()),
-    path('podcast/<int:rss_pk>/episode/<int:episode_nom>/', PodcastEpisodeDetailView.as_view()),
+    path('podcast/<int:rss_pk>/episode/<int:episode_nom>/comments/', PodcastEpisodeDetailView.as_view({"get":"get_comments"})),
+    path('podcast/<int:rss_pk>/episode/<int:episode_nom>/', PodcastEpisodeDetailView.as_view({"get":"get"})),
 
     path('recommended/<str:method>/', PodcastRecommendationView.as_view()),
 

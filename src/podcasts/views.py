@@ -1,13 +1,16 @@
 from django.shortcuts import render
-from rest_framework import generics,status
+from rest_framework import generics,status,viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 
 from core.parser import *
 from core.views import EpisodeListView,EpisodeDetailView
 from accounts.auth_backends import JWTAuthBackend
+from interactions.serializers import CommentSerializer
+from interactions.models import Comment
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
 from .utils import like_based_recomended_podcasts,subscription_based_recommended_podcasts
@@ -121,7 +124,7 @@ class PodcastEpisodeListView(EpisodeListView):
 
 
 
-class PodcastEpisodeDetailView(EpisodeDetailView):
+class PodcastEpisodeDetailView(EpisodeDetailView, viewsets.ViewSet):
     """
     Retrieve Podcast Episode Details.
 
@@ -149,6 +152,13 @@ class PodcastEpisodeDetailView(EpisodeDetailView):
     """
     queryset = PodcastEpisode.objects.all()
     serializer_class = PodcastEpisodeSerializer
+
+    @action(detail=True)
+    def get_comments(self, request, *args, **kwargs):
+        episode = self.get_object()
+        comments = Comment.objects.filter(episode=episode.id)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
 
 
 
