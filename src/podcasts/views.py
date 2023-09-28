@@ -1,5 +1,5 @@
-from django.shortcuts import render,HttpResponse
-from rest_framework import generics
+from django.shortcuts import render
+from rest_framework import generics,status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,7 +10,7 @@ from core.views import EpisodeListView,EpisodeDetailView
 from accounts.auth_backends import JWTAuthBackend
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
-from .utils import get_recommended_podcasts
+from .utils import like_based_recomended_podcasts,subscription_based_recommended_podcasts
 
 
 
@@ -156,7 +156,14 @@ class PodcastRecommendationView(APIView):
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
+    recommendations_methods = {
+        "likes": like_based_recomended_podcasts,
+        "subscriptions": subscription_based_recommended_podcasts,
+    }
+
+    def get(self, request, method):
+        if method not in self.recommendations_methods:
+            return Response({"details":"Recommendation method not found"}, status=status.HTTP_400_BAD_REQUEST)
         user = request.user
-        podcasts = get_recommended_podcasts(user)
-        return Response(podcasts)
+        function = self.recommendations_methods[method]
+        return Response(function(user))
