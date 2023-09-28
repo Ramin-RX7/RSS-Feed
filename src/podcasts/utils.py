@@ -5,7 +5,17 @@ from .models import PodcastRSS
 
 
 
-def get_recommended_podcasts(user):
+def get_categories_count(podcasts):
+    categories = {}
+    for podcast in podcasts:
+        category = podcast.main_fields.category
+        categories.setdefault(category, 0)
+        categories[category] += 1
+    sorted_categories = {k:v for k,v in sorted(categories.items(), key=lambda item:item[1], reverse=True)}
+    return sorted_categories
+
+
+
     all_podcasts = PodcastRSS.objects.all()
     user_podcasts = all_podcasts.filter(subscribe__user=user)
     categories = {}
