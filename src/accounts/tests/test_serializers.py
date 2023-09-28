@@ -59,3 +59,21 @@ class UserRegisterSerializerTest(TestCase):
 
 
 
+
+class UserLoginSerializerTest(TestCase):
+    def test_valid_data(self):
+        data = {'username': 'testuser', 'password': 'testpassword'}
+        serializer = UserLoginSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_missing_username(self):
+        data = {'password': 'testpassword'}
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('username', serializer.errors)
+
+    def test_missing_password(self):
+        data = {'username': 'testuser'}
+        serializer = UserLoginSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('password', serializer.errors)
