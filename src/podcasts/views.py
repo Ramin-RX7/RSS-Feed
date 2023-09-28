@@ -1,11 +1,16 @@
 from django.shortcuts import render,HttpResponse
 from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 
 from core.parser import *
 from core.views import EpisodeListView,EpisodeDetailView
+from accounts.auth_backends import JWTAuthBackend
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
+from .utils import get_recommended_podcasts
 
 
 
@@ -147,10 +152,11 @@ class PodcastEpisodeDetailView(EpisodeDetailView):
 
 
 
+class PodcastRecommendationView(APIView):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAuthenticated,)
 
-def create_new_episode(request, rss_pk, episode_nom):
-    rss = PodcastRSS.objects.get(id=rss_pk)
-    parser = EpisodeXMLParser(rss, PodcastEpisode)
-    content = get_rss_content(rss)
-    parser.create_new_episode(content["item"][episode_nom-1])
-    return HttpResponse("done")
+    def get(self, request):
+        user = request.user
+        podcasts = get_recommended_podcasts(user)
+        return Response(podcasts)
