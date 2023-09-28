@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import generics,status
+from rest_framework import generics,status,viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -124,7 +124,7 @@ class PodcastEpisodeListView(EpisodeListView):
 
 
 
-class PodcastEpisodeDetailView(EpisodeDetailView):
+class PodcastEpisodeDetailView(EpisodeDetailView, viewsets.ViewSet):
     """
     Retrieve Podcast Episode Details.
 
@@ -154,10 +154,11 @@ class PodcastEpisodeDetailView(EpisodeDetailView):
     serializer_class = PodcastEpisodeSerializer
 
     @action(detail=True)
-    def get_comments(self, request, episode_nom):
-        comments = Comment.objects.filter(episode=episode_nom)
-        data = CommentSerializer(comments, many=True)
-        return Response([data])
+    def get_comments(self, request, *args, **kwargs):
+        episode = self.get_object()
+        comments = Comment.objects.filter(episode=episode.id)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
 
 
 
