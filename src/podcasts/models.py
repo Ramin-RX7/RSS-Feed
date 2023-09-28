@@ -26,6 +26,7 @@ class PodcastRSSPaths(models.Model):
     email = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)
 
+    category = models.CharField(max_length=100, null=True, blank=True)
     summary = models.CharField(max_length=100, null=True, blank=True)
     image = models.CharField(max_length=100, null=True, blank=True)
     host = models.CharField(max_length=100, null=True, blank=True)
@@ -43,10 +44,11 @@ class PodcastMainFields(models.Model):
     email = models.EmailField()
     owner = models.CharField(max_length=50)
 
+    category = models.CharField(max_length=75, null=True, blank=True)
     summary = models.TextField(blank=True, null=True)
     image = models.CharField(max_length=300, null=True)      # URLField
     host = models.CharField(max_length=50, null=True)
-    keywords = models.CharField(max_length=150, null=True, blank=True)
+    keywords = models.TextField(null=True, blank=True)
     explicit = models.CharField(max_length=100, null=True)   # Boolean field
     copyright = models.CharField(max_length=100, null=True)
     language = models.CharField(max_length=25, null=True)
@@ -79,8 +81,8 @@ class PodcastRSS(BaseModel):
             return saved
         return super().save()
 
-    def __str__(self):
-        return f"{self.name} ({self.main_fields.title})"
+    # def __str__(self):
+        # return f"{self.name} ({self.main_fields.title})"
 
 
 
