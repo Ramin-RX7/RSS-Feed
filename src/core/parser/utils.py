@@ -31,6 +31,6 @@ def get_unparsed_episodes(rss_object, episodes_model):
     live_episodes_count = len(live_episodes)
     diff = live_episodes_count - db_episodes_count
     if diff > 0:
-        return live_episodes[:diff]
+        return (live_episodes[:diff])[::-1]
     else:
         return []
