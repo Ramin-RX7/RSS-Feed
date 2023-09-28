@@ -57,3 +57,32 @@ class UserLoginViewTest(TestCase):
 
 
 
+
+class RefreshTokenViewTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('token_refresh')
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        data = {'username': 'testuser', 'password': 'testpassword'}
+        response = self.client.post(reverse("login"), data, format='json', HTTP_USER_AGENT="sth")
+        self.refresh_token = response.data["refresh"]
+
+
+    def test_refresh_token_with_valid_token(self):
+        data = {'refresh_token': self.refresh_token}
+        response = self.client.post(self.url, data, format='json', HTTP_USER_AGENT="sth")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+
+    def test_refresh_token_with_invalid_token(self):
+        invalid_token = 'invalid-token'
+        data = {'refresh_token': invalid_token}
+        response = self.client.post(self.url, data, format='json', HTTP_USER_AGENT="sth")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def _test_refresh_token_without_authentication(self):
+        response = self.client.post(self.url, format='json', HTTP_USER_AGENT="sth")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
