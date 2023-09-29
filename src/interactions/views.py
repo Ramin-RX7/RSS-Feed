@@ -31,19 +31,24 @@ class LikeView(generics.ListCreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({"details":"already liked"}, status=status.HTTP_208_ALREADY_REPORTED)
 
+    @action(detail=True, methods=["POST"])
+    def unlike(self, request, *args, **kwargs):
+        episode_id = request.data.get('episode_id')
+        like_qs = self.get_queryset().filter(episode=episode_id)
+        if like_qs.exists():
+            return Response({'detail': 'not liked yet'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        like_qs.get().delete()
+        return Response({'detail': 'Like removed successfully.'}, status=status.HTTP_202_ACCEPTED)
 
 
     def list(self, request, *args, **kwargs):
         """
         {
-            "episodes": [PODCAST_ID, ]
+            "episodes": [EPISODE_ID, ]
         }
         """
-        # subscriptions = Subscribe.objects.filter(user=request.user)
-        # subscriptions = self.serializer_class(subscriptions, many=True)
-        # return Response({'podcasts': list(subscriptions.data)}, status=status.HTTP_200_OK)
-        subscriptions = Like.objects.filter(user=request.user).values_list("episode__id", flat=True)
-        return Response({'podcasts': list(subscriptions)}, status=status.HTTP_200_OK)
+        subscriptions = self.get_queryset().values_list("episode__id", flat=True)
+        return Response({'episodes': list(subscriptions)}, status=status.HTTP_200_OK)
 
 
 
