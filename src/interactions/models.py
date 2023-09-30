@@ -10,12 +10,17 @@ from podcasts.models import PodcastRSS,PodcastEpisode
 class Subscribe(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     rss = models.ForeignKey(PodcastRSS, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('user', 'rss',)
 
 
 
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     episode = models.ForeignKey(PodcastEpisode, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('user', 'episode',)
+
 
 
 class Comment(BaseModel):
