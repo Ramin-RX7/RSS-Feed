@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models,transaction
 
 from core.models import BaseModel
 from core.parser import *
@@ -73,12 +73,14 @@ class PodcastRSS(BaseModel):
 
     def save(self, **kwargs):
         if not self.pk:
-            rss_parser = RSSXMLParser(self, PodcastMainFields)
-            rss_parser.fill_rss()
-            saved = super().save()
-            episode_parser = EpisodeXMLParser(self, PodcastEpisode)
-            episode_parser.create_all_episodes()
-            return saved
+            with transaction.atomic():
+                rss_parser = RSSXMLParser(self, PodcastMainFields)
+                rss_parser.fill_rss()
+                saved = super().save()
+                episode_parser = EpisodeXMLParser(self, PodcastEpisode)
+                episode_parser.create_all_episodes()
+                return saved
+            # raise SystemError()
         return super().save()
 
     # def __str__(self):
