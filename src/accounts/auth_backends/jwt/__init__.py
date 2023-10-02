@@ -32,7 +32,6 @@ class JWTAuthBackend(BaseAuthentication):
         jti = payload.get('jti')
         self._validate_cache_data(user, jti, user_agent)
 
-        print("ALL PASSES")
         return user, payload
 
 
@@ -56,6 +55,8 @@ class JWTAuthBackend(BaseAuthentication):
             return decode_jwt(token)
         except jwt.ExpiredSignatureError:
             raise exceptions.NotAuthenticated('Access token expired') from None
+        except jwt.DecodeError:
+            raise exceptions.ParseError("invalid refresh token")
 
     def _get_username(self, payload):
         username = payload.get('username')
@@ -112,6 +113,8 @@ class JWTAuthBackend(BaseAuthentication):
         except jwt.ExpiredSignatureError:
             raise exceptions.PermissionDenied(
                 'Expired refresh token, please login again.') from None
+        except jwt.DecodeError:
+            raise exceptions.ParseError("invalid refresh token")
 
     def deprecate_refresh_token(self, user, jti, user_agent):
         auth_cache.delete(f"{user.id}|{jti}")

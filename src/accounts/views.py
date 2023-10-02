@@ -160,7 +160,7 @@ class LogoutView(APIView):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
-            print(jti, user)
+            # print(jti, user)
             auth_cache.delete(f"{user.id}|{jti}")
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
