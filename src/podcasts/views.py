@@ -1,16 +1,18 @@
 from django.shortcuts import render
+from django.urls import reverse_lazy
 from rest_framework import generics,status,viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import (action,authentication_classes as auth_classes)
 
 
 from core.parser import *
 from core.views import EpisodeListView,EpisodeDetailView
 from accounts.auth_backends import JWTAuthBackend
-from interactions.serializers import CommentSerializer
-from interactions.models import Comment
+from accounts.models import User
+from interactions.models import Like
+from interactions.serializers import LikeSerializer
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
 from .utils import like_based_recomended_podcasts,subscription_based_recommended_podcasts
@@ -124,7 +126,7 @@ class PodcastEpisodeListView(EpisodeListView):
 
 
 
-class PodcastEpisodeDetailView(EpisodeDetailView, viewsets.ViewSet):
+class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     """
     Retrieve Podcast Episode Details.
 
@@ -153,12 +155,44 @@ class PodcastEpisodeDetailView(EpisodeDetailView, viewsets.ViewSet):
     queryset = PodcastEpisode.objects.all()
     serializer_class = PodcastEpisodeSerializer
 
+    def get_user(self, request):
+        if not (auth:=JWTAuthBackend().authenticate(request)):
+            return Response({"details":"login required"}, status=status.HTTP_403_FORBIDDEN)
+        user = auth[0]
+        if user.is_authenticated:
+            return user
+
+
+    @action(detail=False)
+    def likes(self, request, *args, **kwargs):
+        qs = Like.objects.filter(episode=self.get_object())
+        users = qs.values_list("user", flat=True)
+        return Response({"users":users, "count":len(users)})
+
     @action(detail=True)
-    def get_comments(self, request, *args, **kwargs):
+    def like(self, request, *args, **kwargs):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"details":"login required"}, status=status.HTTP_403_FORBIDDEN)
         episode = self.get_object()
-        comments = Comment.objects.filter(episode=episode.id)
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
+        like,created = Like.objects.get_or_create(user=user, episode=episode)
+        if created:
+            serializer = LikeSerializer(like)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"details":"already liked"}, status=status.HTTP_208_ALREADY_REPORTED)
+
+    @action(detail=True)
+    def unlike(self, request, *args, **kwargs):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"details":"login required"}, status=status.HTTP_403_FORBIDDEN)
+        like_qs = Like.objects.filter(user=user, episode=self.get_object())
+        if not like_qs.exists():
+            return Response({'detail': 'not liked yet'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        # for like in like_qs:
+        #     like.delete()
+        like_qs.get().delete()
+        return Response({'detail': 'Like removed successfully.'}, status=status.HTTP_202_ACCEPTED)
 
 
 

@@ -221,8 +221,6 @@ class ResetPassword(viewsets.ViewSet):
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
-
-
     @action(detail=True, methods=["POST"])
     def reset_password_request(self, request):
         email = request.POST.get("email")
@@ -234,5 +232,4 @@ class ResetPassword(viewsets.ViewSet):
             code = str(uuid.uuid4())
             auth_cache.set(f"reset_password_{code}", user.id, timeout=60*15)
             send_reset_password_email.delay(user.email, code)
-            return Response({"sent":"ok"}, status=status.HTTP_202_ACCEPTED)
-        return Response({"send":"not found"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return Response({"send":"ok"}, status=status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from accounts.auth_backends import JWTAuthBackend
 from podcasts.models import PodcastEpisode
@@ -16,31 +17,38 @@ class LikeView(generics.ListCreateAPIView):
 
     serializer_class = LikeSerializer
 
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        episode_id = request.data.get('episode_id')
+    def get_queryset(self):
+        user = self.request.user
+        return Like.objects.filter(user=user)
 
-        try:
-            existing_like = Like.objects.get(user=user, episode=episode_id)
-            existing_like.delete()
-            return Response({'detail': 'Like removed successfully.'}, status=status.HTTP_200_OK)
-        except Like.DoesNotExist:
-            like_data = {'user': user.id, 'episode': episode_id}
-            serializer = self.get_serializer(data=like_data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=True, methods=["POST"])
+    def like(self, request, *args, **kwargs):
+        episode_id = request.data.get('episode_id')
+        # episode = PodcastEpisode.objects.get(id=episode_id)
+        if not self.get_queryset().filter(episode=episode_id).exists():
+            like = Like.objects.create(user=request.user, episode=episode_id)
+            serializer = self.get_serializer(like)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"details":"already liked"}, status=status.HTTP_208_ALREADY_REPORTED)
+
+    @action(detail=True, methods=["POST"])
+    def unlike(self, request, *args, **kwargs):
+        episode_id = request.data.get('episode_id')
+        like_qs = self.get_queryset().filter(episode=episode_id)
+        if like_qs.exists():
+            return Response({'detail': 'not liked yet'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        like_qs.get().delete()
+        return Response({'detail': 'Like removed successfully.'}, status=status.HTTP_202_ACCEPTED)
 
 
     def list(self, request, *args, **kwargs):
         """
         {
-            "episodes": [PODCAST_ID, ]
+            "episodes": [EPISODE_ID, ]
         }
         """
-        episodes = Like.objects.filter(user=request.user).values_list("episode__id", flat=True)
-        return Response({'episodes': list(episodes)}, status=status.HTTP_200_OK)
+        subscriptions = self.get_queryset().values_list("episode__id", flat=True)
+        return Response({'episodes': list(subscriptions)}, status=status.HTTP_200_OK)
 
 
 
