@@ -83,6 +83,18 @@ services:
 
 
 
+  # esearch:
+  #   mem_limit: 100m
+  #   image: elasticsearch:7.14.2
+  #   ports:
+  #     - 9200:9200
+  #   environment:
+  #     - discovery.type=single-node
+  #   networks:
+  #     - main
+
+
+
 networks:
     main:
 
