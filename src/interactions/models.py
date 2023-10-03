@@ -10,6 +10,7 @@ from podcasts.models import PodcastRSS,PodcastEpisode
 class Subscribe(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     rss = models.ForeignKey(PodcastRSS, on_delete=models.CASCADE)
+    notification = models.BooleanField(default=False)
     class Meta:
         unique_together = ('user', 'rss',)
 
