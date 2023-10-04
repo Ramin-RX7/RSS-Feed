@@ -50,3 +50,45 @@ def auth_listener():
     channel.basic_consume(queue='auth', on_message_callback=auth_callback, auto_ack=True)
     channel.start_consuming()
 
+
+
+def podcast_update_notification(body):
+    """Create podcast update Notification objects based on received body"""
+    data = json.loads(body)
+    podcast_id = data["podcast_id"]
+    episodes = data["episodes"]
+    podcast = PodcastRSS.objects.get(id=podcast_id)
+
+    notifications = []
+    for subscription in Subscribe.objects.filter(rss=podcast,notification=True):
+        user = subscription.user
+        notifications.append(Notification(
+            name = "Podcast Update",
+            user = user,
+            data = body
+        ))
+    Notification.objects.bulk_create(notifications)
+    # Notification.objects.bulk_create([
+    #     Notification(user=subscription.user,title="Podcast Update", data=body) for
+    #         subscription in Subscribe.objects.filter(rss=podcast,notification=True)
+    # ])
+
+def podcast_log(body):
+    """Log podcast updates"""
+    # use elastic search to log data
+
+def podcast_update_callback(ch, method, properties, body):
+    notif = Thread(target=podcast_update_notification, args=(body,))
+    log = Thread(target=podcast_log, args=(body,))
+    log.start()
+    notif.start()
+    log.join()
+    notif.join()
+
+def podcast_update_listener():
+    channel = connection.channel()
+    channel.queue_declare(queue='podcast-update')
+    channel.basic_consume(queue='podcast-update', on_message_callback=podcast_update_callback, auto_ack=True)
+    channel.start_consuming()
+
+
