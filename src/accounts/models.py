@@ -38,3 +38,14 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
+
+
+_login_types = models.TextChoices("login_type","login refresh access")
+class UserTracking(models.Model):
+    user_id = models.IntegerField(editable=False,primary_key=True)
+    last_login = models.DateTimeField()
+    last_userlogin = models.DateTimeField()
+    login_type = models.CharField(choices=_login_types.choices, max_length=10, default="Pending")
+    user_agent = models.TextField()
+    ip = models.GenericIPAddressField()
+    # last_seen = models.DateTimeField()
