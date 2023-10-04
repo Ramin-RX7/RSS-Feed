@@ -92,3 +92,12 @@ def podcast_update_listener():
     channel.start_consuming()
 
 
+
+
+
+if __name__ == "__main__":
+    podcast_update = Process(target=podcast_update_listener)
+    auth = Process(target=auth_listener)
+
+    podcast_update.start()
+    auth.start()
