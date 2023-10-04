@@ -25,6 +25,7 @@ services:
       - ./src/:/src/
     depends_on:
       - postgres
+      - rabbit
     ports:
       - 8000:8000
     networks:
@@ -71,6 +72,7 @@ services:
 
   rabbit:
     image: rabbitmq:management
+    container_name: rabbitmq
     restart: always
     networks:
       - main
@@ -81,6 +83,20 @@ services:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
 
+
+  consumer:
+    build: .
+    command: python consumers.py
+    container_name: consumer
+    restart: always
+    volumes:
+      - ./src/:/src/
+    depends_on:
+      - app
+    networks:
+      - main
+    environment:
+      - PYTHONUNBUFFERED=1
 
 
   # esearch:
