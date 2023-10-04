@@ -28,3 +28,13 @@ class Comment(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     episode = models.ForeignKey(PodcastEpisode, on_delete=models.CASCADE)
     content = models.CharField(max_length=150)
+
+
+
+class Notification(BaseModel):
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length=75)
+    data = models.TextField()
+    is_sent = models.BooleanField(default=False)
+    # is_received = models.BooleanField(default=False)
+    # is_read = models.BooleanField(default=False)
