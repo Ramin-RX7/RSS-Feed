@@ -4,15 +4,14 @@ from celery import shared_task, group, chord, chain, Task
 from celery.worker.request import Request
 from celery.exceptions import Retry
 
+from django.apps import apps
+
+from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
 from .models import PodcastRSS
 
 
 
 logger = logging.getLogger('celery-logger')
-
-
-MAX_CONCURRENCY = 3
-MAX_RETRY = 4
 
 
 
@@ -56,7 +55,7 @@ class PodcastRequest(Request):
 class BaseTask(Task):
     Request = PodcastRequest
     autoretry_for = (Exception,)
-    max_retries = 5
+    max_retries = CELERY_MAX_RETRY
     # retry_backoff_max = 32
     # default_retry_delay = 1
     # retry_kwargs = {'max_retries': 5}   # READMORE
@@ -81,7 +80,7 @@ def update_podcasts_episodes():
     podcasts = PodcastRSS.objects.all()
 
     tasks = [update_podcast.s(podcast_id=podcast.id) for podcast in podcasts]
-    task_groups = divide_tasks(tasks, MAX_CONCURRENCY)
+    task_groups = divide_tasks(tasks, CELERY_MAX_CONCURRENCY)
 
     initial_chain = chain()
     for task_group in task_groups:
