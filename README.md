@@ -65,12 +65,16 @@ Clone your forked repository to your local machine:
 ```bash
 git clone https://github.com/Ramin-RX7/RSS-Feed.git
 ```
-Create a new branch for your changes:
 
+Create a new branch for your changes:
 
 ```bash
 git checkout -b feature/your-feature-name
 ```
+
+Now make any changes you want.
+
+Finally create a pull request and mention all the changes of your branch.
 
 
 
