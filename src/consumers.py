@@ -7,6 +7,7 @@ from threading import Thread
 import pika
 import django
 
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
@@ -14,9 +15,6 @@ django.setup()
 from accounts.models import UserTracking
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe
-
-
-connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit'))
 
 
 
@@ -44,11 +42,7 @@ def auth_callback(ch, method, properties, body):
     track_user(data)
     log_signin(data)
 
-def auth_listener():
-    channel = connection.channel()
-    channel.queue_declare(queue='auth')
-    channel.basic_consume(queue='auth', on_message_callback=auth_callback, auto_ack=True)
-    channel.start_consuming()
+
 
 
 
@@ -85,10 +79,23 @@ def podcast_update_callback(ch, method, properties, body):
     log.join()
     notif.join()
 
-def podcast_update_listener():
+
+
+
+
+
+def auth_listener():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit'))
     channel = connection.channel()
-    channel.queue_declare(queue='podcast-update')
-    channel.basic_consume(queue='podcast-update', on_message_callback=podcast_update_callback, auto_ack=True)
+    channel.queue_declare(queue='auth')
+    channel.basic_consume(queue='auth', on_message_callback=auth_callback, auto_ack=True)
+    channel.start_consuming()
+
+def podcast_update_listener():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit'))
+    channel = connection.channel()
+    channel.queue_declare(queue='podcast_update')
+    channel.basic_consume(queue='podcast_update', on_message_callback=podcast_update_callback, auto_ack=True)
     channel.start_consuming()
 
 
