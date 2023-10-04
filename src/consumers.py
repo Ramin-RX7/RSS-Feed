@@ -12,6 +12,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 
+from config.settings.rabbitmq import RABBIT_URL
+
 from accounts.models import UserTracking
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe
@@ -85,14 +87,14 @@ def podcast_update_callback(ch, method, properties, body):
 
 
 def auth_listener():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit'))
+    connection = pika.BlockingConnection(RABBIT_URL)
     channel = connection.channel()
     channel.queue_declare(queue='auth')
     channel.basic_consume(queue='auth', on_message_callback=auth_callback, auto_ack=True)
     channel.start_consuming()
 
 def podcast_update_listener():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbit'))
+    connection = pika.BlockingConnection(RABBIT_URL)
     channel = connection.channel()
     channel.queue_declare(queue='podcast_update')
     channel.basic_consume(queue='podcast_update', on_message_callback=podcast_update_callback, auto_ack=True)
