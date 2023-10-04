@@ -3,14 +3,18 @@ import time
 
 import pika
 
-__all__ = ("RABBIT_CHANNEL", "RABBIT_CONNECTION")
+from .base import BASE_ENV
 
 
-params = pika.URLParameters('amqp://rabbit:5672')
+__all__ = ("RABBIT_CHANNEL", "RABBIT_CONNECTION", "RABBIT_URL")
+
+
+
+RABBIT_URL = pika.URLParameters(BASE_ENV("RABBIT_URL"))
 
 for _ in range(6):
     try:
-        RABBIT_CONNECTION = pika.BlockingConnection(params)
+        RABBIT_CONNECTION = pika.BlockingConnection(RABBIT_URL)
     except pika.exceptions.AMQPConnectionError as e:
         print("RabbitMQ is not up yet. sleeping for 2.5 second")
         time.sleep(2.5)
