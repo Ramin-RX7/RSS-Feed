@@ -20,6 +20,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+
+    "core.middlewares.APICallLogMiddleware",
 ]
 
 
