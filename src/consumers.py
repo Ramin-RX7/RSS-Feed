@@ -26,18 +26,25 @@ def track_user(data):
     """Save the latest login info of user in db"""
     # assert data["type"] in ("register", "login", "access", "refresh", "other")
     user_id = data["user_id"]
-    user_tracking,created = UserTracking.objects.get_or_create(user_id=user_id)
-    user_tracking.last_login = datetime.fromtimestamp(data["time"])
-    user_tracking.login_type = data["type"]
-    user_tracking.user_agent = data["user_agent"]
-    user_tracking.ip = data["ip"]
-    if user_tracking.login_type == "login":
-        user_tracking.last_userlogin = user_tracking.last_login
-    user_tracking.save()
+    user_track = UserTracking.objects.filter(user_id=user_id)
+    if user_track.exists():
+        user_track = user_track.get()
+    else:
+        user_track = UserTracking(user_id=user_id)
+        user_track.last_userlogin = datetime.fromtimestamp(0)
+    user_track.last_login = datetime.fromtimestamp(data["time"])
+    user_track.login_type = data["type"]
+    user_track.user_agent = data["user_agent"]
+    user_track.ip = data["ip"]
+    if user_track.login_type == "login":
+        user_track.last_userlogin = user_track.last_login
+    user_track.save()
+
 
 def log_signin(data):
     """Log user login data"""
     # use elastic search to log data
+
 
 def auth_callback(ch, method, properties, body):
     track = Thread(target=podcast_update_notification, args=(body,))
@@ -69,9 +76,11 @@ def podcast_update_notification(body):
     #         subscription in Subscribe.objects.filter(rss=podcast,notification=True)
     # ])
 
+
 def podcast_log(body):
     """Log podcast updates"""
     # use elastic search to log data
+
 
 def podcast_update_callback(ch, method, properties, body):
     notif = Thread(target=podcast_update_notification, args=(body,))
@@ -80,7 +89,6 @@ def podcast_update_callback(ch, method, properties, body):
     notif.start()
     log.join()
     notif.join()
-
 
 
 
@@ -99,7 +107,6 @@ def podcast_update_listener():
     channel.queue_declare(queue='podcast_update')
     channel.basic_consume(queue='podcast_update', on_message_callback=podcast_update_callback, auto_ack=True)
     channel.start_consuming()
-
 
 
 
