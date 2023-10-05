@@ -61,3 +61,9 @@ def _get_user_agent(headers):
     if user_agent is None:
         raise exceptions.ValidationError('user-agent header is not provided')
     return user_agent
+
+def _get_remote_addr(headers):
+    user_agent = headers.get("user-agent")
+    if user_agent is None:
+        raise exceptions.ValidationError('user-agent header is not provided')
+    return user_agent
