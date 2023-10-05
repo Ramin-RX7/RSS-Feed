@@ -40,12 +40,12 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
 
 
 
-_login_types = models.TextChoices("login_type","login refresh access")
+_login_types = models.TextChoices("login_type","login refresh access other register")
 class UserTracking(models.Model):
     user_id = models.IntegerField(editable=False,primary_key=True)
     last_login = models.DateTimeField()
     last_userlogin = models.DateTimeField()
-    login_type = models.CharField(choices=_login_types.choices, max_length=10, default="Pending")
+    login_type = models.CharField(choices=_login_types.choices, max_length=10, default="register")
     user_agent = models.TextField()
-    ip = models.GenericIPAddressField()
+    ip = models.CharField(max_length=75)
     # last_seen = models.DateTimeField()
