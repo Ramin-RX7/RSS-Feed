@@ -40,10 +40,10 @@ def log_signin(data):
     # use elastic search to log data
 
 def auth_callback(ch, method, properties, body):
-    data = json.loads(body)
-    track_user(data)
-    log_signin(data)
-
+    track = Thread(target=podcast_update_notification, args=(body,))
+    log = Thread(target=podcast_log, args=(body,))
+    log.start()
+    track.start()
 
 
 
