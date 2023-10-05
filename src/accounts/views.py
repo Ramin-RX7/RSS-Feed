@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from django.core.cache import caches
@@ -8,12 +9,13 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from core import rabbitmq
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
 )
 from .auth_backends import LoginAuthBackend, JWTAuthBackend
-from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent
+from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent,_get_remote_addr
 from .models import User
 from .tasks import send_reset_password_email
 
@@ -92,6 +94,15 @@ class UserLoginView(APIView):
         _save_cache(user, jti, user_agent)
 
         data = {
+            "time": time.time(),
+            "type": "login",
+            "user_agent": user_agent,
+            "ip": _get_remote_addr(request.headers),
+            "user_id": user.id,
+        }
+        rabbitmq.publish("auth", "...", data)
+
+        data = {
             "access": access_token,
             "refresh": refresh_token,
         }
@@ -132,7 +143,6 @@ class RefreshTokenView(APIView):
 
         payload = decode_jwt(refresh_token)
         _save_cache(auth._get_user(payload), jti, auth._get_user_agent(request.headers))
-        # _save_cache(request.auth["username"], jti, request.headers["user-agent"])
 
         data = {
             "access": access_token,
