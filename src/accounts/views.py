@@ -52,6 +52,22 @@ class UserRegisterView(CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserRegisterSerializer
 
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 201:
+            username = response.data["username"]
+            user = User.objects.get(username=username)
+            data = {
+                "time": time.time(),
+                "type": "login",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+                "user_id": user.id,
+            }
+            rabbitmq.publish("auth", "...", data)
+        return response
+
+
 
 class UserLoginView(APIView):
     """
