@@ -12,8 +12,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 
-from config.settings.rabbitmq import RABBIT_URL
+from config.settings import RABBIT_URL
 
+from core import elastic
 from accounts.models import UserTracking
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe
