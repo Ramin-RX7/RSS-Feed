@@ -78,14 +78,15 @@ def podcast_update_notification(body):
     # ])
 
 
-def podcast_log(body):
+def podcast_log(data):
     """Log podcast updates"""
     # use elastic search to log data
 
 
 def podcast_update_callback(ch, method, properties, body):
+    data = json.dumps(body)
     notif = Thread(target=podcast_update_notification, args=(body,))
-    log = Thread(target=podcast_log, args=(body,))
+    log = Thread(target=podcast_log, args=(data,))
     log.start()
     notif.start()
     log.join()
