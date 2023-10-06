@@ -47,8 +47,9 @@ def log_signin(data):
 
 
 def auth_callback(ch, method, properties, body):
-    track = Thread(target=podcast_update_notification, args=(body,))
-    log = Thread(target=podcast_log, args=(body,))
+    data = json.loads(body)
+    track = Thread(target=track_user, args=(data,))
+    log = Thread(target=log_signin, args=(data,))
     log.start()
     track.start()
 
