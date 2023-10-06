@@ -7,6 +7,7 @@ from celery.exceptions import Retry
 from django.apps import apps
 
 from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
+from core.elastic import submit_record_podcast_update
 from .models import PodcastRSS
 
 
