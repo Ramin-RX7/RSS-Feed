@@ -12,8 +12,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 
-from config.settings.rabbitmq import RABBIT_URL
+from config.settings import RABBIT_URL
 
+from core import elastic
 from accounts.models import UserTracking
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe
@@ -43,6 +44,7 @@ def track_user(data):
 
 def log_signin(data):
     """Log user login data"""
+    elastic.submit_record_auth(data)
     # use elastic search to log data
 
 
@@ -78,14 +80,16 @@ def podcast_update_notification(body):
     # ])
 
 
-def podcast_log(body):
+def podcast_log(data):
     """Log podcast updates"""
+    elastic.submit_record_podcast_update(data)
     # use elastic search to log data
 
 
 def podcast_update_callback(ch, method, properties, body):
+    data = json.dumps(body)
     notif = Thread(target=podcast_update_notification, args=(body,))
-    log = Thread(target=podcast_log, args=(body,))
+    log = Thread(target=podcast_log, args=(data,))
     log.start()
     notif.start()
     log.join()

@@ -30,9 +30,15 @@ class PodcastRequest(Request):
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
             podcast_id = self.kwargs["podcast_id"]
-            logger.critical(
-                f'Failed to update podcast: id={podcast_id}: "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}"',
-            )
+            submit_record_podcast_update({
+                "title" : "fail",
+                "message" : "Failed to update podcast",
+                "podcast_id" : podcast_id,
+                "error_name" : error_name,
+                "error_message" : message,
+                "args" : self.args,
+                "kwargs" : self.kwargs,
+            })
         return super().on_failure(
             exc_info,
             send_failed_event=send_failed_event,
@@ -42,13 +48,25 @@ class PodcastRequest(Request):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
         podcast_id = self.kwargs["podcast_id"]
-        logger.error(
-            f'Failed to update podcast: "id={podcast_id}" "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}". retrying...',
-        )
+        submit_record_podcast_update({
+            "title" : "fail",
+            "message" : "Failed to update podcast, retrying...",
+            "podcast_id" : podcast_id,
+            "error_name" : error_name,
+            "error_message" : message,
+            "args" : self.args,
+            "kwargs" : self.kwargs,
+        })
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
-        logger.info(kwargs)
-        logger.info("successful update")
+        # logger.info(kwargs)
+        submit_record_podcast_update({
+            "title" : "success",
+            "message" : "podcast updated",
+            "podcast_id" : self.kwargs["podcast_id"],
+            "args" : self.args,
+            "kwargs" : self.kwargs,
+        })
         return super().on_success(failed__retval__runtime, **kwargs)
 
 
