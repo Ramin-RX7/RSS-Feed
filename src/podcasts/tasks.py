@@ -1,3 +1,4 @@
+import time
 import logging
 
 from celery import shared_task, group, chord, chain, Task
@@ -8,6 +9,7 @@ from django.apps import apps
 
 from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
 from core.elastic import submit_record_podcast_update
+from core import rabbitmq
 from .models import PodcastRSS
 
 
@@ -85,10 +87,16 @@ class BaseTask(Task):
 
 @shared_task(base=BaseTask, bind=True)
 def update_podcast(self, podcast_id):
-    # logger.info(f"XXXXXX - {self.request.retries}, {podcast_id}")
+    # self.request.retries
     podcast = PodcastRSS.objects.get(id=podcast_id)
-    podcast.update_episodes()
-    # raise ValueError("wtf")
+    new_episodes = podcast.update_episodes()
+    if new_episodes:  # Q: Should I publish that a podcast updated with no new episodes?
+        data = {
+            "timestamp": time.time(),
+            "podcast_id": podcast_id,
+            "new_episodes": new_episodes
+        }
+        rabbitmq.publish_podcast_update(data)
     logger.info(f'Successfully updated podcast: {podcast.name}')
 
 
