@@ -33,8 +33,9 @@ def track_user(data):
     else:
         user_track = UserTracking(user_id=user_id)
         user_track.last_userlogin = datetime.fromtimestamp(0)
-    user_track.last_login = datetime.fromtimestamp(data["time"])
-    user_track.login_type = data["type"]
+
+    user_track.last_login = datetime.fromtimestamp(data["timestamp"])
+    user_track.login_type = data["method"]
     user_track.user_agent = data["user_agent"]
     user_track.ip = data["ip"]
     if user_track.login_type == "login":

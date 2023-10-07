@@ -58,8 +58,8 @@ class UserRegisterView(CreateAPIView):
             username = response.data["username"]
             user = User.objects.get(username=username)
             data = {
-                "time": time.time(),
-                "type": "login",
+                "timestamp": time.time(),
+                "method": "login",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
                 "user_id": user.id,
@@ -110,8 +110,8 @@ class UserLoginView(APIView):
         _save_cache(user, jti, user_agent)
 
         data = {
-            "time": time.time(),
-            "type": "login",
+            "timestamp": time.time(),
+            "method": "login",
             "user_agent": user_agent,
             "ip": _get_remote_addr(request.headers),
             "user_id": user.id,
