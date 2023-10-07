@@ -66,18 +66,22 @@ def podcast_update_notification(body):
     episodes = data["episodes"]
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
-    notifications = []
+    notification = Notification.objects.create(
+        name = "Podcast_Update",
+        data = body
+    )
+    user_notifications = []
     for subscription in Subscribe.objects.filter(rss=podcast,notification=True):
-        user = subscription.user
-        notifications.append(Notification(
-            name = "Podcast Update",
-            user = user,
-            data = body
+        user_notifications.append(UserNotification(
+            user = subscription.user,
+            notification = notification
         ))
-    Notification.objects.bulk_create(notifications)
-    # Notification.objects.bulk_create([
-    #     Notification(user=subscription.user,title="Podcast Update", data=body) for
-    #         subscription in Subscribe.objects.filter(rss=podcast,notification=True)
+    UserNotification.objects.bulk_create(user_notifications)
+    # UserNotification.objects.bulk_create([
+    #     UserNotification(
+    #         user=subscription.user,
+    #         notification=notification,
+    #     ) for subscription in Subscribe.objects.filter(rss=podcast,notification=True)
     # ])
 
 
