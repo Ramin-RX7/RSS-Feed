@@ -35,10 +35,10 @@ class Notification(BaseModel):
     name = models.CharField(max_length=75)
     data = models.TextField()
     is_sent = models.BooleanField(default=False)
-    # is_received = models.BooleanField(default=False)
-    # is_read = models.BooleanField(default=False)
 
 
 class UserNotification(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
+    # is_received = models.BooleanField(default=False)
+    # is_read = models.BooleanField(default=False)
