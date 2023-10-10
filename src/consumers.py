@@ -45,8 +45,7 @@ def track_user(data):
 
 def log_signin(data):
     """Log user login data"""
-    elastic.submit_record_auth(data)
-    # use elastic search to log data
+    elastic.submit_record(data)
 
 
 def auth_callback(ch, method, properties, body):
@@ -87,8 +86,7 @@ def podcast_update_notification(body):
 
 def podcast_log(data):
     """Log podcast updates"""
-    elastic.submit_record_podcast_update(data)
-    # use elastic search to log data
+    elastic.submit_record(data)
 
 
 def podcast_update_callback(ch, method, properties, body):

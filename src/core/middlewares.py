@@ -3,7 +3,7 @@ import logging
 from django.urls import resolve
 from django.utils import timezone
 
-from core.elastic import submit_record_requests
+from core import elastic
 from core.utils import get_request_data
 
 
@@ -36,6 +36,6 @@ class APICallLogMiddleware:
 
             "response_code": response.status_code
         }
-        submit_record_requests(data)
+        elastic.submit_record(data)
 
         return response
