@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from rest_framework import generics,status,viewsets
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import (action,authentication_classes as auth_classes)
 
@@ -16,6 +16,7 @@ from interactions.serializers import LikeSerializer
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
 from .utils import like_based_recomended_podcasts,subscription_based_recommended_podcasts
+from .tasks import update_podcasts_episodes,update_podcast
 
 
 
@@ -211,3 +212,19 @@ class PodcastRecommendationView(APIView):
         user = request.user
         function = self.recommendations_methods[method]
         return Response(function(user))
+
+
+
+class PodcastUpdateView(viewsets.ViewSet):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAdminUser,)
+
+
+    @action(detail=False)
+    def update_all(self, request, *args, **kwargs):
+        update_podcasts_episodes.delay()
+        return Response({}, status.HTTP_202_ACCEPTED)
+
+    def update_single(self, request, *args, **kwargs):
+        update_podcast.delay(podcast_id=kwargs["pk"])
+        return Response({}, status.HTTP_202_ACCEPTED)
