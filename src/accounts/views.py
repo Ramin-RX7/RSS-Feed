@@ -58,11 +58,12 @@ class UserRegisterView(CreateAPIView):
             username = response.data["username"]
             user = User.objects.get(username=username)
             data = {
+                "user_id": user.id,
                 "timestamp": time.time(),
-                "method": "login",
+                "message": "successful register",
+                "action" : "register",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
-                "user_id": user.id,
             }
             elastic.submit_record("auth",data)
             rabbitmq.publish("auth", "...", data)
@@ -103,7 +104,7 @@ class UserLoginView(APIView):
         password = serializer.validated_data.get('password')
 
         user = LoginAuthBackend().authenticate(request, username=username, password=password)
-        if user is None:
+        if user is None:  #? should we save invalid login attempts?
             return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
         jti,access_token,refresh_token = generate_tokens(username)
@@ -111,11 +112,12 @@ class UserLoginView(APIView):
         _save_cache(user, jti, user_agent)
 
         data = {
+            "user_id": user.id,
             "timestamp": time.time(),
-            "method": "login",
+            "message": "successful register",
+            "action" : "register",
             "user_agent": user_agent,
             "ip": _get_remote_addr(request.headers),
-            "user_id": user.id,
         }
         elastic.submit_record("auth",data)
         rabbitmq.publish("auth", "...", data)
@@ -260,4 +262,12 @@ class ResetPassword(viewsets.ViewSet):
             code = str(uuid.uuid4())
             auth_cache.set(f"reset_password_{code}", user.id, timeout=60*15)
             send_reset_password_email.delay(user.email, code)
+            elastic.submit_record("auth", {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": f"sent email to {user.email}",
+                "action" : "password-reset-request",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            })
         return Response({"send":"ok"}, status=status.HTTP_200_OK)

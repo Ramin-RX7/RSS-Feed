@@ -1,4 +1,5 @@
 import os
+import time
 import json
 from datetime import datetime
 from multiprocessing import Process
@@ -40,7 +41,12 @@ def track_user(data):
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
-    elastic.submit_record("auth",{"type":"success", "message": "user last activity saved"})
+    elastic.submit_record("auth",{
+        "user_id": user_id,
+        "timestamp": time.time(),
+        "message": "user last activity saved",
+        "action" : "system-track-user",
+    })
 
 
 def auth_callback(ch, method, properties, body):
