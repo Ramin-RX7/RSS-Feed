@@ -122,7 +122,7 @@ class UserLoginView(APIView):
             "access": access_token,
             "refresh": refresh_token,
         }
-        return Response(data, status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 
