@@ -63,7 +63,7 @@ def podcast_update_notification(body):
     """Create podcast update Notification objects based on received body"""
     data = json.loads(body)
     podcast_id = data["podcast_id"]
-    episodes = data["episodes"]
+    episodes = data["new_episodes"]
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
     notification = Notification.objects.create(
