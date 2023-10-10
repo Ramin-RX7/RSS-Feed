@@ -1,8 +1,8 @@
-import json
 import os
+import time
+import json
 from datetime import datetime
 from multiprocessing import Process
-from threading import Thread
 
 import pika
 import django
@@ -41,20 +41,17 @@ def track_user(data):
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
-
-
-def log_signin(data):
-    """Log user login data"""
-    elastic.submit_record_auth(data)
-    # use elastic search to log data
+    elastic.submit_record("auth",{
+        "user_id": user_id,
+        "timestamp": time.time(),
+        "message": "user last activity saved",
+        "action" : "system-track-user",
+    })
 
 
 def auth_callback(ch, method, properties, body):
     data = json.loads(body)
-    track = Thread(target=track_user, args=(data,))
-    log = Thread(target=log_signin, args=(data,))
-    log.start()
-    track.start()
+    track_user(data)
 
 
 
@@ -77,6 +74,7 @@ def podcast_update_notification(body):
             notification = notification
         ))
     UserNotification.objects.bulk_create(user_notifications)
+    elastic.submit_record("podcast_update",{"type":"success", "message": "podcast update notification created"})
     # UserNotification.objects.bulk_create([
     #     UserNotification(
     #         user=subscription.user,
@@ -85,20 +83,9 @@ def podcast_update_notification(body):
     # ])
 
 
-def podcast_log(data):
-    """Log podcast updates"""
-    elastic.submit_record_podcast_update(data)
-    # use elastic search to log data
-
-
 def podcast_update_callback(ch, method, properties, body):
     data = json.loads(body)
-    notif = Thread(target=podcast_update_notification, args=(body,))
-    log = Thread(target=podcast_log, args=(data,))
-    log.start()
-    notif.start()
-    log.join()
-    notif.join()
+    podcast_update_notification(body)
 
 
 

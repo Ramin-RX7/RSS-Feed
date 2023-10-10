@@ -14,7 +14,7 @@ from .models import PodcastRSS
 
 
 
-logger = logging.getLogger('celery-logger')
+# logger = logging.getLogger('celery-logger')
 
 
 
@@ -33,7 +33,7 @@ class PodcastRequest(Request):
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
             podcast_id = self.kwargs["podcast_id"]
-            elastic.submit_record_podcast_update({
+            elastic.submit_record("podcast_update", {
                 "title" : "fail",
                 "message" : "Failed to update podcast",
                 "podcast_id" : podcast_id,
@@ -51,7 +51,7 @@ class PodcastRequest(Request):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
         podcast_id = self.kwargs["podcast_id"]
-        elastic.submit_record_podcast_update({
+        elastic.submit_record("podcast_update", {
             "title" : "fail",
             "message" : "Failed to update podcast, retrying...",
             "podcast_id" : podcast_id,
@@ -63,7 +63,7 @@ class PodcastRequest(Request):
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
         # logger.info(kwargs)
-        elastic.submit_record_podcast_update({
+        elastic.submit_record("podcast_update", {
             "title" : "success",
             "message" : "podcast updated",
             "podcast_id" : self.kwargs["podcast_id"],
@@ -73,7 +73,7 @@ class PodcastRequest(Request):
         return super().on_success(failed__retval__runtime, **kwargs)
 
 
-class BaseTask(Task):
+class BasePodcastTask(Task):
     Request = PodcastRequest
     autoretry_for = (Exception,)
     max_retries = CELERY_MAX_RETRY
@@ -85,25 +85,25 @@ class BaseTask(Task):
 
 
 
-@shared_task(base=BaseTask, bind=True)
+@shared_task(base=BasePodcastTask, bind=True)
 def update_podcast(self, podcast_id):
     # self.request.retries
     podcast = PodcastRSS.objects.get(id=podcast_id)
     new_episodes = podcast.update_episodes()
-    if new_episodes:  # Q: Should I publish that a podcast updated with no new episodes?
+    if new_episodes:  #? Should I publish that a podcast updated with no new episodes?
         data = {
             "timestamp": time.time(),
             "podcast_id": podcast_id,
             "new_episodes": new_episodes
         }
         rabbitmq.publish_podcast_update(data)
-    logger.info(f'Successfully updated podcast: {podcast.name}')
+    # logger.info(f'Successfully updated podcast: {podcast.name}')
 
 
 
 @shared_task
 def update_podcasts_episodes():
-    logger.info("Request to update podcasts episodes")
+    # logger.info("Request to update podcasts episodes")
     podcasts = PodcastRSS.objects.all()
 
     tasks = [update_podcast.s(podcast_id=podcast.id) for podcast in podcasts]
@@ -116,7 +116,6 @@ def update_podcasts_episodes():
     # result = initial_chain | process_parsing_results.s()
     initial_chain.apply_async()
 
-
 # @shared_task
 # def update_podcasts_episodes():
     # podcasts = PodcastRSS.objects.all()
@@ -124,6 +123,6 @@ def update_podcasts_episodes():
         # update_podcast.delay(podcast.id)
 
 
-@shared_task
-def process_parsing_results(results:list[dict[int:bool]]):
-    print(f"in pro res: {results}")
+# @shared_task
+# def process_parsing_results(results:list[dict[int:bool]]):
+#     print(f"in pro res: {results}")

@@ -1,16 +1,18 @@
-from config.settings import ES_CONNECTION
+from datetime import datetime
+
+import pytz
+
+from config.settings import ES_CONNECTION,TIME_ZONE
 
 
 
-def submit_record(index, data):
-    ES_CONNECTION.index(index, body=data)
+INDEX_PREFIX = "IND"
+tz = pytz.timezone(TIME_ZONE)
 
 
-def submit_record_auth(data):
-    return submit_record(index="auth",data=data)
 
-def submit_record_podcast_update(data):
-    return submit_record(index="podcast_update",data=data)
-
-def submit_record_requests(data):
-    return submit_record(index="api_calls",data=data)
+def submit_record(event:str, data:dict):
+    tz_now = datetime.now(tz)
+    today = tz_now.strftime("%Y-%m-%d")
+    data["event_type"] = event
+    ES_CONNECTION.index(f"{INDEX_PREFIX}-{today}", body=data)

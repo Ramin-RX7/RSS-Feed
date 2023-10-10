@@ -1,14 +1,9 @@
-import logging
-
 from celery import shared_task
 
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse_lazy
 
-
-
-logger = logging.getLogger('celery-logger')
 
 
 @shared_task
@@ -23,5 +18,4 @@ def send_reset_password_email(receiver, code):
     )
     recipient_list = [receiver]
     email = EmailMessage(subject=subject, body=message, to=recipient_list)
-    # email.send()
-    logger.info(f'send password reset link to "{receiver}" "code={code}"')
+    email.send()
