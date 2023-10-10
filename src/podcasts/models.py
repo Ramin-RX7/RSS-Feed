@@ -69,7 +69,8 @@ class PodcastRSS(BaseModel):
 
     def update_episodes(self):
         parser = EpisodeXMLParser(self, PodcastEpisode)
-        parser.update_episodes()
+        new_episodes = parser.update_episodes()
+        return new_episodes
 
     def save(self, **kwargs):
         if not self.pk:

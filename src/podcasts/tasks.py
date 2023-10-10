@@ -1,18 +1,20 @@
+import time
 import logging
 
 from celery import shared_task, group, chord, chain, Task
 from celery.worker.request import Request
 from celery.exceptions import Retry
 
+from django.apps import apps
+
+from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
+from core import elastic
+from core import rabbitmq
 from .models import PodcastRSS
 
 
 
 logger = logging.getLogger('celery-logger')
-
-
-MAX_CONCURRENCY = 3
-MAX_RETRY = 4
 
 
 
@@ -31,9 +33,15 @@ class PodcastRequest(Request):
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
             podcast_id = self.kwargs["podcast_id"]
-            logger.critical(
-                f'Failed to update podcast: id={podcast_id}: "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}"',
-            )
+            elastic.submit_record_podcast_update({
+                "title" : "fail",
+                "message" : "Failed to update podcast",
+                "podcast_id" : podcast_id,
+                "error_name" : error_name,
+                "error_message" : message,
+                "args" : self.args,
+                "kwargs" : self.kwargs,
+            })
         return super().on_failure(
             exc_info,
             send_failed_event=send_failed_event,
@@ -43,20 +51,32 @@ class PodcastRequest(Request):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
         podcast_id = self.kwargs["podcast_id"]
-        logger.error(
-            f'Failed to update podcast: "id={podcast_id}" "{error_name}: {message}". "complete_args:{self.args}-{self.kwargs}". retrying...',
-        )
+        elastic.submit_record_podcast_update({
+            "title" : "fail",
+            "message" : "Failed to update podcast, retrying...",
+            "podcast_id" : podcast_id,
+            "error_name" : error_name,
+            "error_message" : message,
+            "args" : self.args,
+            "kwargs" : self.kwargs,
+        })
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
-        logger.info(kwargs)
-        logger.info("successful update")
+        # logger.info(kwargs)
+        elastic.submit_record_podcast_update({
+            "title" : "success",
+            "message" : "podcast updated",
+            "podcast_id" : self.kwargs["podcast_id"],
+            "args" : self.args,
+            "kwargs" : self.kwargs,
+        })
         return super().on_success(failed__retval__runtime, **kwargs)
 
 
 class BaseTask(Task):
     Request = PodcastRequest
     autoretry_for = (Exception,)
-    max_retries = 5
+    max_retries = CELERY_MAX_RETRY
     # retry_backoff_max = 32
     # default_retry_delay = 1
     # retry_kwargs = {'max_retries': 5}   # READMORE
@@ -67,10 +87,16 @@ class BaseTask(Task):
 
 @shared_task(base=BaseTask, bind=True)
 def update_podcast(self, podcast_id):
-    # logger.info(f"XXXXXX - {self.request.retries}, {podcast_id}")
+    # self.request.retries
     podcast = PodcastRSS.objects.get(id=podcast_id)
-    podcast.update_episodes()
-    # raise ValueError("wtf")
+    new_episodes = podcast.update_episodes()
+    if new_episodes:  # Q: Should I publish that a podcast updated with no new episodes?
+        data = {
+            "timestamp": time.time(),
+            "podcast_id": podcast_id,
+            "new_episodes": new_episodes
+        }
+        rabbitmq.publish_podcast_update(data)
     logger.info(f'Successfully updated podcast: {podcast.name}')
 
 
@@ -81,7 +107,7 @@ def update_podcasts_episodes():
     podcasts = PodcastRSS.objects.all()
 
     tasks = [update_podcast.s(podcast_id=podcast.id) for podcast in podcasts]
-    task_groups = divide_tasks(tasks, MAX_CONCURRENCY)
+    task_groups = divide_tasks(tasks, CELERY_MAX_CONCURRENCY)
 
     initial_chain = chain()
     for task_group in task_groups:

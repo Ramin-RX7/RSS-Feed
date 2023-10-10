@@ -9,7 +9,9 @@ urlpatterns = format_suffix_patterns([
     path("test/", test, name="test"),
 
     path('podcasts/', PodcastListView.as_view()),
+    path('podcasts/update/', PodcastUpdateView.as_view({"post":"update_all"})),
     path('podcast/<int:pk>/', PodcastDetailView.as_view()),
+    path('podcast/<int:pk>/update/', PodcastUpdateView.as_view({"post":"update_single"})),
 
     path('podcast/<int:rss_pk>/episode/<int:pk>/likes/', EpisodeDetailView.as_view({"get":"likes"})),
     path('podcast/<int:rss_pk>/episode/<int:pk>/like/', EpisodeDetailView.as_view({"get":"like"})),
