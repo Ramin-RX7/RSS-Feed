@@ -1,6 +1,5 @@
 import os
 import json
-import logging
 from datetime import datetime
 from multiprocessing import Process
 
@@ -20,7 +19,6 @@ from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
 
 
-console_logger = logging.getLogger("django.server")
 
 
 
@@ -42,8 +40,7 @@ def track_user(data):
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
-    elastic.submit_record({"type":"success", "message": "user last activity saved"})
-    # console_logger.info("user last activity saved")
+    elastic.submit_record("auth",{"type":"success", "message": "user last activity saved"})
 
 
 def auth_callback(ch, method, properties, body):
@@ -71,8 +68,7 @@ def podcast_update_notification(body):
             notification = notification
         ))
     UserNotification.objects.bulk_create(user_notifications)
-    elastic.submit_record({"type":"success", "message": "podcast update notification created"})
-    # console_logger.info("podcast update notification created")
+    elastic.submit_record("podcast_update",{"type":"success", "message": "podcast update notification created"})
     # UserNotification.objects.bulk_create([
     #     UserNotification(
     #         user=subscription.user,

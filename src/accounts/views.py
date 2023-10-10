@@ -64,7 +64,7 @@ class UserRegisterView(CreateAPIView):
                 "ip": _get_remote_addr(request.headers),
                 "user_id": user.id,
             }
-            elastic.submit_record(data)
+            elastic.submit_record("auth",data)
             rabbitmq.publish("auth", "...", data)
         return response
 
@@ -117,7 +117,7 @@ class UserLoginView(APIView):
             "ip": _get_remote_addr(request.headers),
             "user_id": user.id,
         }
-        elastic.submit_record(data)
+        elastic.submit_record("auth",data)
         rabbitmq.publish("auth", "...", data)
 
         data = {
