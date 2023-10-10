@@ -1,5 +1,3 @@
-import logging
-
 from django.urls import resolve
 from django.utils import timezone
 
@@ -7,7 +5,6 @@ from core import elastic
 from core.utils import get_request_data
 
 
-logger = logging.getLogger("django")
 
 
 
@@ -30,7 +27,7 @@ class APICallLogMiddleware:
             "request_data": get_request_data(request),
             "http_method": request.method,
 
-            "user_id": user.id if user.is_authenticated else None,
+            "user_id": user.id if user.is_authenticated else 0,
             "user_agent": request.headers.get("user-agent"),
             "ip": request.META.get('REMOTE_ADDR'),
 
