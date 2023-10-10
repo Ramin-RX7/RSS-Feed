@@ -9,7 +9,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from core import rabbitmq
+from core import rabbitmq,elastic
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
@@ -54,7 +54,7 @@ class UserRegisterView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        if response.status_code == 201:
+        if response.status_code == 201:  #? Should we only take accepted register calls?
             username = response.data["username"]
             user = User.objects.get(username=username)
             data = {
@@ -64,6 +64,7 @@ class UserRegisterView(CreateAPIView):
                 "ip": _get_remote_addr(request.headers),
                 "user_id": user.id,
             }
+            elastic.submit_record(data)
             rabbitmq.publish("auth", "...", data)
         return response
 
@@ -116,6 +117,7 @@ class UserLoginView(APIView):
             "ip": _get_remote_addr(request.headers),
             "user_id": user.id,
         }
+        elastic.submit_record(data)
         rabbitmq.publish("auth", "...", data)
 
         data = {
