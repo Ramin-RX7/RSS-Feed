@@ -43,17 +43,9 @@ def track_user(data):
     user_track.save()
 
 
-def log_signin(data):
-    """Log user login data"""
-    elastic.submit_record(data)
-
-
 def auth_callback(ch, method, properties, body):
     data = json.loads(body)
-    track = Thread(target=track_user, args=(data,))
-    log = Thread(target=log_signin, args=(data,))
-    log.start()
-    track.start()
+    track_user(data)
 
 
 
