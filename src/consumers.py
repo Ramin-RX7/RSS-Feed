@@ -1,8 +1,8 @@
-import json
 import os
+import json
+import logging
 from datetime import datetime
 from multiprocessing import Process
-from threading import Thread
 
 import pika
 import django
@@ -20,6 +20,7 @@ from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
 
 
+console_logger = logging.getLogger("django.server")
 
 
 
@@ -41,6 +42,8 @@ def track_user(data):
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
+    elastic.submit_record({"type":"success", "message": "user last activity saved"})
+    # console_logger.info("user last activity saved")
 
 
 def auth_callback(ch, method, properties, body):
@@ -68,6 +71,8 @@ def podcast_update_notification(body):
             notification = notification
         ))
     UserNotification.objects.bulk_create(user_notifications)
+    elastic.submit_record({"type":"success", "message": "podcast update notification created"})
+    # console_logger.info("podcast update notification created")
     # UserNotification.objects.bulk_create([
     #     UserNotification(
     #         user=subscription.user,
@@ -76,19 +81,9 @@ def podcast_update_notification(body):
     # ])
 
 
-def podcast_log(data):
-    """Log podcast updates"""
-    elastic.submit_record(data)
-
-
 def podcast_update_callback(ch, method, properties, body):
     data = json.loads(body)
-    notif = Thread(target=podcast_update_notification, args=(body,))
-    log = Thread(target=podcast_log, args=(data,))
-    log.start()
-    notif.start()
-    log.join()
-    notif.join()
+    podcast_update_notification(body)
 
 
 
