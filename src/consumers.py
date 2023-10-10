@@ -92,7 +92,7 @@ def podcast_log(data):
 
 
 def podcast_update_callback(ch, method, properties, body):
-    data = json.dumps(body)
+    data = json.loads(body)
     notif = Thread(target=podcast_update_notification, args=(body,))
     log = Thread(target=podcast_log, args=(data,))
     log.start()
