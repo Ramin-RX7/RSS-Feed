@@ -8,7 +8,7 @@ from celery.exceptions import Retry
 from django.apps import apps
 
 from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
-from core.elastic import submit_record_podcast_update
+from core import elastic
 from core import rabbitmq
 from .models import PodcastRSS
 
@@ -33,7 +33,7 @@ class PodcastRequest(Request):
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
             podcast_id = self.kwargs["podcast_id"]
-            submit_record_podcast_update({
+            elastic.submit_record_podcast_update({
                 "title" : "fail",
                 "message" : "Failed to update podcast",
                 "podcast_id" : podcast_id,
@@ -51,7 +51,7 @@ class PodcastRequest(Request):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
         podcast_id = self.kwargs["podcast_id"]
-        submit_record_podcast_update({
+        elastic.submit_record_podcast_update({
             "title" : "fail",
             "message" : "Failed to update podcast, retrying...",
             "podcast_id" : podcast_id,
@@ -63,7 +63,7 @@ class PodcastRequest(Request):
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
         # logger.info(kwargs)
-        submit_record_podcast_update({
+        elastic.submit_record_podcast_update({
             "title" : "success",
             "message" : "podcast updated",
             "podcast_id" : self.kwargs["podcast_id"],
