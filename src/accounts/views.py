@@ -259,6 +259,8 @@ class ChangePassword(APIView):
             "ip": _get_remote_addr(request.headers),
         }
         elastic.submit_record("auth",data)
+        rabbitmq.publish("auth", "...", data)
+
         return Response(
                 {"detail": "password changed successfully"},
                 status=status.HTTP_202_ACCEPTED
