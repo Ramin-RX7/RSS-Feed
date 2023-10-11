@@ -162,7 +162,10 @@ class RefreshTokenView(APIView):
         jti,access_token,refresh_token = auth.get_new_tokens(request)
 
         payload = decode_jwt(refresh_token)
-        _save_cache(auth._get_user(payload), jti, auth._get_user_agent(request.headers))
+        user = auth._get_user(payload)
+        _save_cache(user, jti, auth._get_user_agent(request.headers))
+        request.user = user
+
 
         data = {
             "access": access_token,
