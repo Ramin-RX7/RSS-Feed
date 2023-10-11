@@ -214,6 +214,8 @@ class LogoutView(APIView):
                 "ip": _get_remote_addr(request.headers),
             }
             elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
+
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
