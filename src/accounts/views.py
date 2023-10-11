@@ -115,7 +115,7 @@ class UserLoginView(APIView):
             "user_id": user.id,
             "timestamp": time.time(),
             "message": "successful register",
-            "action" : "register",
+            "action" : "login",
             "user_agent": user_agent,
             "ip": _get_remote_addr(request.headers),
         }
@@ -170,7 +170,7 @@ class RefreshTokenView(APIView):
             "user_id": user.id,
             "timestamp": time.time(),
             "message": "successful register",
-            "action" : "register",
+            "action" : "refresh",
             "user_agent": _get_user_agent(request.headers),
             "ip": _get_remote_addr(request.headers),
         }
