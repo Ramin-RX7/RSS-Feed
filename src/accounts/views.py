@@ -157,7 +157,7 @@ class RefreshTokenView(APIView):
         else:
             return Response({"message":"already authenticated"})
 
-        refresh_token = request.data.get('refresh_token')
+        # refresh_token = request.data.get('refresh_token')
         auth = JWTAuthBackend()
         jti,access_token,refresh_token = auth.get_new_tokens(request)
 
@@ -166,6 +166,15 @@ class RefreshTokenView(APIView):
         _save_cache(user, jti, auth._get_user_agent(request.headers))
         request.user = user
 
+        elastic_data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful register",
+            "action" : "register",
+            "user_agent": _get_user_agent(request.headers),
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",elastic_data)
 
         data = {
             "access": access_token,
