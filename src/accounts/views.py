@@ -283,6 +283,15 @@ class ResetPassword(viewsets.ViewSet):
             user.set_password(serializer.data["new_password"])
             user.save()
             auth_cache.delete(f"reset_password_{code}")
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful register",
+                "action" : "reset=password-request",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
