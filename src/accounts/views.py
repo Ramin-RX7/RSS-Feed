@@ -203,8 +203,17 @@ class LogoutView(APIView):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
-            # print(jti, user)
             auth_cache.delete(f"{user.id}|{jti}")
+
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful register",
+                "action" : "logout",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
