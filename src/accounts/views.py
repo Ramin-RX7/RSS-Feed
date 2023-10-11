@@ -114,7 +114,7 @@ class UserLoginView(APIView):
         data = {
             "user_id": user.id,
             "timestamp": time.time(),
-            "message": "successful register",
+            "message": "successful login",
             "action" : "login",
             "user_agent": user_agent,
             "ip": _get_remote_addr(request.headers),
@@ -169,7 +169,7 @@ class RefreshTokenView(APIView):
         elastic_data = {
             "user_id": user.id,
             "timestamp": time.time(),
-            "message": "successful register",
+            "message": "successful login with refresh token",
             "action" : "refresh",
             "user_agent": _get_user_agent(request.headers),
             "ip": _get_remote_addr(request.headers),
@@ -208,7 +208,7 @@ class LogoutView(APIView):
             data = {
                 "user_id": user.id,
                 "timestamp": time.time(),
-                "message": "successful register",
+                "message": "successful logout",
                 "action" : "logout",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
@@ -253,7 +253,7 @@ class ChangePassword(APIView):
         data = {
             "user_id": user.id,
             "timestamp": time.time(),
-            "message": "successful register",
+            "message": "successful password change",
             "action" : "change-password",
             "user_agent": _get_user_agent(request.headers),
             "ip": _get_remote_addr(request.headers),
@@ -286,7 +286,7 @@ class ResetPassword(viewsets.ViewSet):
             data = {
                 "user_id": user.id,
                 "timestamp": time.time(),
-                "message": "successful register",
+                "message": "successful reset-password",
                 "action" : "reset=password-request",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
@@ -310,7 +310,7 @@ class ResetPassword(viewsets.ViewSet):
             elastic.submit_record("auth", {
                 "user_id": user.id,
                 "timestamp": time.time(),
-                "message": f"sent email to {user.email}",
+                "message": f"successful password reset request. sent email to {user.email}",
                 "action" : "password-reset-request",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
