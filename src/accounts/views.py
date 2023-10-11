@@ -250,6 +250,15 @@ class ChangePassword(APIView):
         user.set_password(data["new_password"])
         user.save()
 
+        data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful register",
+            "action" : "change-password",
+            "user_agent": _get_user_agent(request.headers),
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",data)
         return Response(
                 {"detail": "password changed successfully"},
                 status=status.HTTP_202_ACCEPTED
