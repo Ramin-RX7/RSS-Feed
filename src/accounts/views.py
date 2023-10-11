@@ -292,6 +292,7 @@ class ResetPassword(viewsets.ViewSet):
                 "ip": _get_remote_addr(request.headers),
             }
             elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
