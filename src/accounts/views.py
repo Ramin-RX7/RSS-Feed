@@ -175,6 +175,7 @@ class RefreshTokenView(APIView):
             "ip": _get_remote_addr(request.headers),
         }
         elastic.submit_record("auth",elastic_data)
+        rabbitmq.publish("auth", "...", elastic_data)
 
         data = {
             "access": access_token,
