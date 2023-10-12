@@ -25,6 +25,7 @@ services:
       - ./src/:/src/
     depends_on:
       - postgres
+      - rabbit
     ports:
       - 8000:8000
     networks:
@@ -69,6 +70,86 @@ services:
       - celery
 
 
+  rabbit:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: always
+    networks:
+      - main
+    ports:
+      - 5672:5672
+      - 15672:15672
+    env_file:
+      - /src/.env
+    # healthcheck:
+
+
+  consumer:
+    build: .
+    command: python consumers.py
+    container_name: consumer
+    restart: always
+    volumes:
+      - ./src/:/src/
+    depends_on:
+      - app
+    networks:
+      - main
+    environment:
+      - PYTHONUNBUFFERED=1
+
+
+  esearch:
+    mem_limit: 512m
+    image: elasticsearch:7.14.2
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - main
+    environment:
+      discovery.type: 'single-node'
+      xpack.security.enabled: 'false'
+      # xpack.security.enrollment.enabled: 'true'
+      ELASTIC_PASSWORD: 'elastic'
+      # ES_JAVA_OPTS: '-Xms256m -Xmx256m'
+      network.bind_host: 0.0.0.0
+      network.host: 0.0.0.0
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
+    #   cluster.name: 'docker-cluster'
+    #   bootstrap.memory_lock: 'true'
+    #   ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "0.40"
+    #       memory: 500M
+    # ulimits:
+    #   memlock:
+    #     hard: -1
+    #     soft: -1
+    #   nofile:
+    #     hard: 65535
+    #     soft: 65535
+    #   nproc: 65535
+
+
+
+  kibana:
+    mem_limit: 512m
+    image: kibana:7.14.2
+    ports:
+      - 5601:5601
+    networks:
+      - main
+    volumes:
+      - kibana_data:/usr/share/kibana/config
+      # - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    environment:
+      ELASTICSEARCH_HOSTS: "http://esearch:9200"
+
 
 
 networks:
@@ -80,3 +161,5 @@ networks:
 volumes:
     postgres_data:
     redis_data:
+    elastic_data:
+    kibana_data:

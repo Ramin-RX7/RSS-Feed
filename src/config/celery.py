@@ -12,6 +12,9 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'update-podcasts-every-hour': {
         'task': 'podcasts.tasks.update_podcasts_episodes',
-        'schedule': crontab(minute=1),  # Run every hour, at the start of the hour
+        'schedule': crontab(minute="*/15"), # every 15 minutes
+        # 'schedule': crontab(minute=0), # every hour
+        # 'schedule': crontab(hour=3, minute=0), # 3:00 a.m
     },
 }
+# app.conf.timezone

@@ -90,6 +90,8 @@ class EpisodeXMLParser:
         if new_episodes:
             episodes = self.parse_multiple_episodes(new_episodes)
             self._create_episode_bulk(episodes)
+            return new_episodes
+        return []
 
     def _create_episode_bulk(self, episode_objects:list):
         self.episode_model.objects.bulk_create(episode_objects)

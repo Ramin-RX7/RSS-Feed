@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from django.core.cache import caches
@@ -8,12 +9,13 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from core import rabbitmq,elastic
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
 )
 from .auth_backends import LoginAuthBackend, JWTAuthBackend
-from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent
+from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent,_get_remote_addr
 from .models import User
 from .tasks import send_reset_password_email
 
@@ -50,6 +52,24 @@ class UserRegisterView(CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserRegisterSerializer
 
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 201:  #? Should we only take accepted register calls?
+            username = response.data["username"]
+            user = User.objects.get(username=username)
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful register",
+                "action" : "register",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
+        return response
+
+
 
 class UserLoginView(APIView):
     """
@@ -84,7 +104,7 @@ class UserLoginView(APIView):
         password = serializer.validated_data.get('password')
 
         user = LoginAuthBackend().authenticate(request, username=username, password=password)
-        if user is None:
+        if user is None:  #? should we save invalid login attempts?
             return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
         jti,access_token,refresh_token = generate_tokens(username)
@@ -92,10 +112,21 @@ class UserLoginView(APIView):
         _save_cache(user, jti, user_agent)
 
         data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful login",
+            "action" : "login",
+            "user_agent": user_agent,
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",data)
+        rabbitmq.publish("auth", "...", data)
+
+        data = {
             "access": access_token,
             "refresh": refresh_token,
         }
-        return Response(data, status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 
@@ -126,13 +157,25 @@ class RefreshTokenView(APIView):
         else:
             return Response({"message":"already authenticated"})
 
-        refresh_token = request.data.get('refresh_token')
+        # refresh_token = request.data.get('refresh_token')
         auth = JWTAuthBackend()
         jti,access_token,refresh_token = auth.get_new_tokens(request)
 
         payload = decode_jwt(refresh_token)
-        _save_cache(auth._get_user(payload), jti, auth._get_user_agent(request.headers))
-        # _save_cache(request.auth["username"], jti, request.headers["user-agent"])
+        user = auth._get_user(payload)
+        _save_cache(user, jti, auth._get_user_agent(request.headers))
+        request.user = user
+
+        elastic_data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful login with refresh token",
+            "action" : "refresh",
+            "user_agent": _get_user_agent(request.headers),
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",elastic_data)
+        rabbitmq.publish("auth", "...", elastic_data)
 
         data = {
             "access": access_token,
@@ -160,8 +203,19 @@ class LogoutView(APIView):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
-            # print(jti, user)
             auth_cache.delete(f"{user.id}|{jti}")
+
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful logout",
+                "action" : "logout",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
+
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -196,6 +250,17 @@ class ChangePassword(APIView):
         user.set_password(data["new_password"])
         user.save()
 
+        data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful password change",
+            "action" : "change-password",
+            "user_agent": _get_user_agent(request.headers),
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",data)
+        rabbitmq.publish("auth", "...", data)
+
         return Response(
                 {"detail": "password changed successfully"},
                 status=status.HTTP_202_ACCEPTED
@@ -218,10 +283,18 @@ class ResetPassword(viewsets.ViewSet):
             user.set_password(serializer.data["new_password"])
             user.save()
             auth_cache.delete(f"reset_password_{code}")
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful reset-password",
+                "action" : "reset=password-request",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
-
-
 
     @action(detail=True, methods=["POST"])
     def reset_password_request(self, request):
@@ -234,5 +307,12 @@ class ResetPassword(viewsets.ViewSet):
             code = str(uuid.uuid4())
             auth_cache.set(f"reset_password_{code}", user.id, timeout=60*15)
             send_reset_password_email.delay(user.email, code)
-            return Response({"sent":"ok"}, status=status.HTTP_202_ACCEPTED)
-        return Response({"send":"not found"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            elastic.submit_record("auth", {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": f"successful password reset request. sent email to {user.email}",
+                "action" : "password-reset-request",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            })
+        return Response({"send":"ok"}, status=status.HTTP_200_OK)
