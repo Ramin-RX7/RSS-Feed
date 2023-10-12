@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import logging
 from datetime import datetime
 from multiprocessing import Process
 
@@ -16,11 +17,12 @@ from django.db import transaction
 
 from config.settings import RABBIT_URL
 
-from core import elastic
 from accounts.models import UserTracking,User
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
 
+
+logger = logging.getLogger("elastic")
 
 
 
@@ -39,7 +41,8 @@ def track_user(data):
         user_track.last_userlogin = user_track.last_login
     user_track.save()
 
-    elastic.submit_record("auth", "info",{
+    logger.info({
+        "event_type": "auth",
         "user_id": user_id,
         "timestamp": time.time(),
         "message": "user last activity saved",
@@ -60,14 +63,16 @@ def auth_notification(data):
             user = User.objects.get(id=data["user_id"])
             UserNotification.objects.create(user=user, notification=notification)
     except:
-        elastic.submit_record("notification", "error", {
+        logger.error({
+            "event_type":"notification",
             "name": "auth",
             "notif_data": data,
             "message": "could not create notification for user auth action",
             "user": data["user_id"],
         })
     else:
-        elastic.submit_record("notification", "info",{
+        logger.info({
+            "event_type":"notification",
             "name":notification.name,
             "notif_data": notification.data,
             "user": user.id,
@@ -104,14 +109,16 @@ def podcast_update_notification(body):
             notification = Notification.objects.create(name="Podcast_Update", data=body)
             UserNotification.objects.bulk_create(user_notifications)
     except: # BUG: what exception?
-        elastic.submit_record("notification", "error", {
+        logger.error({
+            "event_type":"notification",
             "name": "auth",
             "notif_body": body,
             "user": users,
             "message": "did not create podcast update notification",
         })
     else:
-        elastic.submit_record("notification", "info",{
+        logger.info({
+            "event_type":"notification",
             "name":"auth",
             "notif_data": notification.data,
             "user": users,

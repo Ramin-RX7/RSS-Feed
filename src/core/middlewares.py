@@ -1,10 +1,13 @@
+import logging
+
 from django.urls import resolve
 from django.utils import timezone
 
-from core import elastic
 from core.utils import get_request_data
 
 
+
+logger = logging.getLogger("elastic")
 
 
 
@@ -17,7 +20,7 @@ class APICallLogMiddleware:
         response = self.get_response(request)
         user = request.user
 
-        data = {
+        logger.info({"event_type": "api_call",
             "request_timestamp" : request_timestamp,
             "response_timestamp" : timezone.now().timestamp(),
 
@@ -32,7 +35,5 @@ class APICallLogMiddleware:
             "ip": request.META.get('REMOTE_ADDR'),
 
             "response_code": response.status_code
-        }
-        elastic.submit_record("api_call", "info", data)
-
+        })
         return response

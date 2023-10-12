@@ -1,5 +1,6 @@
 import time
 import uuid
+import logging
 
 from django.core.cache import caches
 from rest_framework import status, permissions, viewsets
@@ -9,7 +10,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from core import rabbitmq,elastic
+from core import rabbitmq
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
@@ -22,7 +23,7 @@ from .tasks import send_reset_password_email
 
 auth_cache = caches["auth"]
 
-
+logger = logging.getLogger("elastic")
 
 
 
@@ -65,7 +66,10 @@ class UserRegisterView(CreateAPIView):
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
             }
-            elastic.submit_record("auth", "info", data)
+            logger.info({
+                **data,
+                "event_type":"auth",
+            })
             rabbitmq.publish("auth", "...", data)
         return response
 
@@ -119,7 +123,10 @@ class UserLoginView(APIView):
             "user_agent": user_agent,
             "ip": _get_remote_addr(request.headers),
         }
-        elastic.submit_record("auth", "info", data)
+        logger.info({
+            **data,
+            "event_type":"auth",
+        })
         rabbitmq.publish("auth", "...", data)
 
         data = {
@@ -174,7 +181,10 @@ class RefreshTokenView(APIView):
             "user_agent": _get_user_agent(request.headers),
             "ip": _get_remote_addr(request.headers),
         }
-        elastic.submit_record("auth", "info", elastic_data)
+        logger.info({
+            **data,
+            "event_type":"auth",
+        })
         rabbitmq.publish("auth", "...", elastic_data)
 
         data = {
@@ -213,7 +223,10 @@ class LogoutView(APIView):
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
             }
-            elastic.submit_record("auth", "info", data)
+            logger.info({
+                **data,
+                "event_type":"auth",
+            })
             rabbitmq.publish("auth", "...", data)
 
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
@@ -258,7 +271,10 @@ class ChangePassword(APIView):
             "user_agent": _get_user_agent(request.headers),
             "ip": _get_remote_addr(request.headers),
         }
-        elastic.submit_record("auth", "info", data)
+        logger.info({
+            **data,
+            "event_type":"auth",
+        })
         rabbitmq.publish("auth", "...", data)
 
         return Response(
@@ -291,7 +307,10 @@ class ResetPassword(viewsets.ViewSet):
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
             }
-            elastic.submit_record("auth", "info", data)
+            logger.info({
+                **data,
+                "event_type":"auth",
+            })
             rabbitmq.publish("auth", "...", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
@@ -307,12 +326,17 @@ class ResetPassword(viewsets.ViewSet):
             code = str(uuid.uuid4())
             auth_cache.set(f"reset_password_{code}", user.id, timeout=60*15)
             send_reset_password_email.delay(user.email, code)
-            elastic.submit_record("auth",  "info", {
+            data = {
                 "user_id": user.id,
                 "timestamp": time.time(),
                 "message": f"successful password reset request. sent email to {user.email}",
                 "action" : "password-reset-request",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),
+            }
+            logger.info({
+                **data,
+                "event_type":"auth",
             })
+            rabbitmq.publish("auth", "...", data)
         return Response({"send":"ok"}, status=status.HTTP_200_OK)
