@@ -9,6 +9,7 @@ from django.apps import apps
 
 from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
 from core import rabbitmq
+from core.utils import get_nows
 from .models import PodcastRSS
 
 
@@ -88,7 +89,7 @@ def update_podcast(self, podcast_id):
     new_episodes = podcast.update_episodes()
     if new_episodes:  #? Should I publish that a podcast updated with no new episodes?
         data = {
-            "timestamp": time.time(),
+            "timestamp": get_nows(),
             "podcast_id": podcast_id,
             "new_episodes": new_episodes
         }

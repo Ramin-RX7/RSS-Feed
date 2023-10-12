@@ -17,6 +17,7 @@ from django.db import transaction
 
 from config.settings import RABBIT_URL
 
+from core.utils import get_nows
 from accounts.models import UserTracking,User
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
@@ -44,7 +45,7 @@ def track_user(data):
     logger.info({
         "event_type": "auth",
         "user_id": user_id,
-        "timestamp": time.time(),
+        "timestamp": get_nows(),
         "message": "user last activity saved",
         "action" : "system-track-user",
     })

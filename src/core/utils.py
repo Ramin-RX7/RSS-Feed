@@ -1,3 +1,9 @@
+from datetime import datetime
+
+from config.settings import TZ_INFO
+
+
+
 def get_request_data(request):
     try:
         request_data = request.data
@@ -8,3 +14,10 @@ def get_request_data(request):
             request_data = None
 
     return request_data
+
+
+def get_now():
+    return datetime.now(TZ_INFO)
+
+def get_nows():
+    return get_now().strftime("%Y-%m-%d %H:%M:%S")

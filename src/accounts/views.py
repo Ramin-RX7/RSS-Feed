@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from core import rabbitmq
+from core.utils import get_nows
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
@@ -60,7 +61,7 @@ class UserRegisterView(CreateAPIView):
             user = User.objects.get(username=username)
             data = {
                 "user_id": user.id,
-                "timestamp": time.time(),
+                "timestamp": get_nows(),
                 "message": "successful register",
                 "action" : "register",
                 "user_agent": _get_user_agent(request.headers),
@@ -117,7 +118,7 @@ class UserLoginView(APIView):
 
         data = {
             "user_id": user.id,
-            "timestamp": time.time(),
+            "timestamp": get_nows(),
             "message": "successful login",
             "action" : "login",
             "user_agent": user_agent,
@@ -175,7 +176,7 @@ class RefreshTokenView(APIView):
 
         elastic_data = {
             "user_id": user.id,
-            "timestamp": time.time(),
+            "timestamp": get_nows(),
             "message": "successful login with refresh token",
             "action" : "refresh",
             "user_agent": _get_user_agent(request.headers),
@@ -217,7 +218,7 @@ class LogoutView(APIView):
 
             data = {
                 "user_id": user.id,
-                "timestamp": time.time(),
+                "timestamp": get_nows(),
                 "message": "successful logout",
                 "action" : "logout",
                 "user_agent": _get_user_agent(request.headers),
@@ -265,7 +266,7 @@ class ChangePassword(APIView):
 
         data = {
             "user_id": user.id,
-            "timestamp": time.time(),
+            "timestamp": get_nows(),
             "message": "successful password change",
             "action" : "change-password",
             "user_agent": _get_user_agent(request.headers),
@@ -301,7 +302,7 @@ class ResetPassword(viewsets.ViewSet):
             auth_cache.delete(f"reset_password_{code}")
             data = {
                 "user_id": user.id,
-                "timestamp": time.time(),
+                "timestamp": get_nows(),
                 "message": "successful reset-password",
                 "action" : "reset=password-request",
                 "user_agent": _get_user_agent(request.headers),
@@ -328,7 +329,7 @@ class ResetPassword(viewsets.ViewSet):
             send_reset_password_email.delay(user.email, code)
             data = {
                 "user_id": user.id,
-                "timestamp": time.time(),
+                "timestamp": get_nows(),
                 "message": f"successful password reset request. sent email to {user.email}",
                 "action" : "password-reset-request",
                 "user_agent": _get_user_agent(request.headers),
