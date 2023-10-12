@@ -56,6 +56,6 @@ json = dict
 NOTIFICATION_PATTERN = {
     "name": str,
     "notif_data": json,
-    "user": int | 0,
+    "user": int,   # 0 if users not set
     "message": str,
 }
