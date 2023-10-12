@@ -33,7 +33,7 @@ class PodcastRequest(Request):
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
             podcast_id = self.kwargs["podcast_id"]
-            elastic.submit_record("podcast_update", {
+            elastic.submit_record("podcast_update", "critical", {
                 "title" : "fail",
                 "message" : "Failed to update podcast",
                 "podcast_id" : podcast_id,
@@ -51,7 +51,7 @@ class PodcastRequest(Request):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
         podcast_id = self.kwargs["podcast_id"]
-        elastic.submit_record("podcast_update", {
+        elastic.submit_record("podcast_update", "error", {
             "title" : "fail",
             "message" : "Failed to update podcast, retrying...",
             "podcast_id" : podcast_id,
@@ -63,7 +63,7 @@ class PodcastRequest(Request):
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
         # logger.info(kwargs)
-        elastic.submit_record("podcast_update", {
+        elastic.submit_record("podcast_update", "info", {
             "title" : "success",
             "message" : "podcast updated",
             "podcast_id" : self.kwargs["podcast_id"],

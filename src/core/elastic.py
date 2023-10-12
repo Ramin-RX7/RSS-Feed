@@ -11,8 +11,9 @@ tz = pytz.timezone(TIME_ZONE)
 
 
 
-def submit_record(event:str, data:dict):
+def submit_record(event:str, level:str, data:dict):
     tz_now = datetime.now(tz)
     today = tz_now.strftime("%Y_%m_%d")
     data["event_type"] = event
+    data["level"] = level
     ES_CONNECTION.index(f"{INDEX_PREFIX}_{today}", body=data)

@@ -44,7 +44,7 @@ def track_user(data):
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
-    elastic.submit_record("auth",{
+    elastic.submit_record("auth", "info",{  # No log for failure of this function
         "user_id": user_id,
         "timestamp": time.time(),
         "message": "user last activity saved",
@@ -76,12 +76,12 @@ def podcast_update_notification(body):
                 notification = notification
             ))
         UserNotification.objects.bulk_create(user_notifications)
-        elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
+        elastic.submit_record("podcast_update", "info",{   # This has to be notification log (not podcast_update)
             "type":"success",
             "message": "podcast update notification created",
         })
         return
-    elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
+    elastic.submit_record("podcast_update", "info", {   # This has to be notification log (not podcast_update)
         "type": "fail",
         "message": "did not create podcast update notification",
         "notif_body": body

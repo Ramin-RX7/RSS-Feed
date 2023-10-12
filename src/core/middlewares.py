@@ -33,6 +33,6 @@ class APICallLogMiddleware:
 
             "response_code": response.status_code
         }
-        elastic.submit_record("api_call", data)
+        elastic.submit_record("api_call", "info", data)
 
         return response
