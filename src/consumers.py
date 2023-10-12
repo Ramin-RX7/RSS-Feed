@@ -12,6 +12,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 
+from django.db import transaction
+
 from config.settings import RABBIT_URL
 
 from core import elastic
@@ -78,12 +80,12 @@ def podcast_update_notification(body):
             "type":"success",
             "message": "podcast update notification created",
         })
-    # UserNotification.objects.bulk_create([
-    #     UserNotification(
-    #         user=subscription.user,
-    #         notification=notification,
-    #     ) for subscription in Subscribe.objects.filter(rss=podcast,notification=True)
-    # ])
+        return
+    elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
+        "type": "fail",
+        "message": "did not create podcast update notification",
+        "notif_body": body
+    })
 
 
 def podcast_update_callback(ch, method, properties, body):
