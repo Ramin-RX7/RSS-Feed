@@ -28,20 +28,17 @@ from interactions.models import Notification,Subscribe,UserNotification
 def track_user(data):
     """Save the latest login info of user in db"""
     user_id = data["user_id"]
-    user_track = UserTracking.objects.filter(user_id=user_id)
-    if user_track.exists():
-        user_track = user_track.get()
-    else:
-        user_track = UserTracking(user_id=user_id)
-        user_track.last_userlogin = datetime.fromtimestamp(0)
 
-    user_track.last_login = datetime.fromtimestamp(data["timestamp"])
-    user_track.login_type = data["action"]
-    user_track.user_agent = data["user_agent"]
-    user_track.ip = data["ip"]
+    user_track, updated = UserTracking.objects.update_or_create(user_id=user_id, defaults={
+        "last_login" : datetime.fromtimestamp(data["timestamp"]),
+        "login_type" : data["action"],
+        "user_agent" : data["user_agent"],
+        "ip" : data["ip"],
+    })
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
+
     elastic.submit_record("auth", "info",{  # No log for failure of this function
         "user_id": user_id,
         "timestamp": time.time(),
