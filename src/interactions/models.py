@@ -36,6 +36,10 @@ class Notification(BaseModel):
     data = models.TextField()
     is_sent = models.BooleanField(default=False)
 
+    def add_user(self, users:list[User]):
+        user_notifications = [UserNotification(user=user, notification=self) for user in users]
+        UserNotification.objects.bulk_create(user_notifications)
+
 
 class UserNotification(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
