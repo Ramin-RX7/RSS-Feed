@@ -50,3 +50,12 @@ PODCAST_UPDATE_PATTERN = {
     "error_name" : str,      # only if level >= "warning"
     "error_message" : str,   # only if level >= "warning"
 }
+
+
+json = dict
+NOTIFICATION_PATTERN = {
+    "name": str,
+    "notif_data": json,
+    "user": int | 0,
+    "message": str,
+}
