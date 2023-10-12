@@ -3,7 +3,7 @@ import logging
 from django.urls import resolve
 from django.utils import timezone
 
-from core.utils import get_request_data
+from core.utils import get_request_data,get_nows
 
 
 
@@ -16,13 +16,13 @@ class APICallLogMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        request_timestamp = timezone.now().timestamp()
+        request_timestamp = get_nows()
         response = self.get_response(request)
         user = request.user
 
         logger.info({"event_type": "api_call",
             "request_timestamp" : request_timestamp,
-            "response_timestamp" : timezone.now().timestamp(),
+            "response_timestamp" : get_nows(),
 
             "url_name": resolve(request.path_info).url_name,
             "url_path": request.path,

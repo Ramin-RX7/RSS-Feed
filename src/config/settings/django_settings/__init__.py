@@ -69,7 +69,7 @@ LANGUAGE_CODE = "en-us"
 
 
 TIME_ZONE = "Asia/Tehran"
-
+TZ_INFO = pytz.timezone(TIME_ZONE)
 
 USE_I18N = True
 
