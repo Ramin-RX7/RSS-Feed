@@ -120,3 +120,29 @@ if __name__ == "__main__":
 
     podcast_update.start()
     auth.start()
+
+
+
+def reconnect_on_fail(method):
+    def wrapper(self, *args, **kwargs):
+        try:
+            getattr(self, method.__name__)(*args, **kwargs)
+        except:  # BUG: Except what exception?
+            self.__init__()
+            getattr(self, method.__name__)(*args, **kwargs)
+    return wrapper
+
+class BaseConsumer:
+    def __init__(self, queue) -> None:
+        self.connection = pika.BlockingConnection(RABBIT_URL)
+        self.channel = self.connection.channel()
+        self.queue = self.channel.queue_declare(queue='auth')
+
+    def _consume(self):
+        self.channel.basic_consume(queue='auth', on_message_callback=auth_callback, auto_ack=True)
+        self.channel.start_consuming()
+
+    def consume(self):
+        while True:
+            self._consume()
+            self.__init__(queue=self.queue)
