@@ -65,21 +65,19 @@ def podcast_update_notification(body):
     episodes = data["new_episodes"]
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
-    notification = Notification.objects.create(
-        name = "Podcast_Update",
-        data = body
-    )
-    user_notifications = []
-    for subscription in Subscribe.objects.filter(rss=podcast,notification=True):
-        user_notifications.append(UserNotification(
-            user = subscription.user,
-            notification = notification
-        ))
-    UserNotification.objects.bulk_create(user_notifications)
-    elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
-        "type":"success",
-        "message": "podcast update notification created",
-    })
+    with transaction.atomic():
+        notification = Notification.objects.create(name="Podcast_Update", data=body)
+        user_notifications = []
+        for subscription in Subscribe.objects.filter(rss=podcast,notification=True):
+            user_notifications.append(UserNotification(
+                user = subscription.user,
+                notification = notification
+            ))
+        UserNotification.objects.bulk_create(user_notifications)
+        elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
+            "type":"success",
+            "message": "podcast update notification created",
+        })
     # UserNotification.objects.bulk_create([
     #     UserNotification(
     #         user=subscription.user,
