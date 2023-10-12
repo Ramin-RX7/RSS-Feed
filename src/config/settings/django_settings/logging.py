@@ -23,12 +23,21 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'verbose',
         },
+        'elastic_handler': {
+            'level': 'DEBUG',
+            'class': 'config.settings.elastic.ElasticLogHandler',
+            'elastic_url': BASE_ENV("ELASTIC_URL"),
+        },
     },
     "loggers": {
         'celery-logger': {
             'handlers': ['celery'],
             'level': 'INFO',
             'propagate': False,
+        },
+        'elastic': {
+            'handlers':['elastic_handler'],
+            'level': 'DEBUG',
         },
     },
 }
