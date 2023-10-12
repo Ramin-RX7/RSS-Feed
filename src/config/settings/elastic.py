@@ -10,6 +10,8 @@ from django.utils import timezone
 from config.settings import TIME_ZONE
 from .base import BASE_ENV
 
+from core.utils import get_nows
+
 
 
 __all__ = ("ES_CONNECTION",)
@@ -30,7 +32,7 @@ class ElasticLogHandler(logging.Handler):
     def emit(self, record: LogRecord) -> None:
         data = record.msg
         data["level"] = record.levelname
-        data["log_timestamp"] = timezone.now().timestamp()
+        data["log_timestamp"] = get_nows()
         today = datetime.now(tz).strftime("%Y_%m_%d")
         self.elastic_connection.index(f"{ELASTIC_INDEX_PREFIX}_{today}", body=data)
 
