@@ -25,7 +25,8 @@ from interactions.models import Notification,Subscribe,UserNotification
 
 def track_user(data):
     """Save the latest login info of user in db"""
-    # assert data["type"] in ("register", "login", "access", "refresh", "other")
+    if data["action"] not in ("register", "login", "access", "refresh",):
+        return
     user_id = data["user_id"]
     user_track = UserTracking.objects.filter(user_id=user_id)
     if user_track.exists():
@@ -35,7 +36,7 @@ def track_user(data):
         user_track.last_userlogin = datetime.fromtimestamp(0)
 
     user_track.last_login = datetime.fromtimestamp(data["timestamp"])
-    user_track.login_type = data["method"]
+    user_track.login_type = data["action"]
     user_track.user_agent = data["user_agent"]
     user_track.ip = data["ip"]
     if user_track.login_type == "login":
@@ -50,6 +51,7 @@ def track_user(data):
 
 
 def auth_callback(ch, method, properties, body):
+    # consumer received auth queue callback
     data = json.loads(body)
     track_user(data)
 
@@ -74,7 +76,10 @@ def podcast_update_notification(body):
             notification = notification
         ))
     UserNotification.objects.bulk_create(user_notifications)
-    elastic.submit_record("podcast_update",{"type":"success", "message": "podcast update notification created"})
+    elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
+        "type":"success",
+        "message": "podcast update notification created",
+    })
     # UserNotification.objects.bulk_create([
     #     UserNotification(
     #         user=subscription.user,
@@ -84,6 +89,7 @@ def podcast_update_notification(body):
 
 
 def podcast_update_callback(ch, method, properties, body):
+    # consumer received podcast update callback
     data = json.loads(body)
     podcast_update_notification(body)
 

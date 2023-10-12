@@ -22,20 +22,19 @@ AUTH_PATTERN = {
     "user_id": int,
     "timestamp": int,  # Time since epoch in ms
     "message": str,
-    "action" : str[_Action],
+    "action" : str, # of _Action
     "user_agent": str,  # if action != "system-*"
     "ip": str,          # if action != "system-*"
 }
 
 
-_HTTP_METHOD = ...
 API_CALLS_PATTERN = {
     "request_timestamp" : int,
     "response_timestamp" : int,
     "url_name": str,
     "url_path": str,
     "request_data": dict,
-    "http_method": str[_HTTP_METHOD],
+    "http_method": str,  # HTTP method
     "user_id": int,
     "user_agent": str,
     "ip": str,

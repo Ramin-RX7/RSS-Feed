@@ -6,13 +6,13 @@ from config.settings import ES_CONNECTION,TIME_ZONE
 
 
 
-INDEX_PREFIX = "IND"
+INDEX_PREFIX = "ind"
 tz = pytz.timezone(TIME_ZONE)
 
 
 
 def submit_record(event:str, data:dict):
     tz_now = datetime.now(tz)
-    today = tz_now.strftime("%Y-%m-%d")
+    today = tz_now.strftime("%Y_%m_%d")
     data["event_type"] = event
-    ES_CONNECTION.index(f"{INDEX_PREFIX}-{today}", body=data)
+    ES_CONNECTION.index(f"{INDEX_PREFIX}_{today}", body=data)
