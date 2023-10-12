@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import logging
 from datetime import datetime
 from multiprocessing import Process
 
@@ -12,37 +13,36 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 
+from django.db import transaction
+
 from config.settings import RABBIT_URL
 
-from core import elastic
-from accounts.models import UserTracking
+from accounts.models import UserTracking,User
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
 
+
+logger = logging.getLogger("elastic")
 
 
 
 
 def track_user(data):
     """Save the latest login info of user in db"""
-    if data["action"] not in ("register", "login", "access", "refresh",):
-        return
     user_id = data["user_id"]
-    user_track = UserTracking.objects.filter(user_id=user_id)
-    if user_track.exists():
-        user_track = user_track.get()
-    else:
-        user_track = UserTracking(user_id=user_id)
-        user_track.last_userlogin = datetime.fromtimestamp(0)
 
-    user_track.last_login = datetime.fromtimestamp(data["timestamp"])
-    user_track.login_type = data["action"]
-    user_track.user_agent = data["user_agent"]
-    user_track.ip = data["ip"]
+    user_track, updated = UserTracking.objects.update_or_create(user_id=user_id, defaults={
+        "last_login" : datetime.fromtimestamp(data["timestamp"]),
+        "login_type" : data["action"],
+        "user_agent" : data["user_agent"],
+        "ip" : data["ip"],
+    })
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
     user_track.save()
-    elastic.submit_record("auth",{
+
+    logger.info({
+        "event_type": "auth",
         "user_id": user_id,
         "timestamp": time.time(),
         "message": "user last activity saved",
@@ -50,11 +50,41 @@ def track_user(data):
     })
 
 
+def auth_notification(data):
+    if data["action"] not in ("register", "login",):
+        return
+    notif_data = {
+        "action": data["action"],
+        "msg": f"Your latest activity: {data['action']}"
+    }
+    try:
+        with transaction.atomic():
+            notification = Notification.objects.create(name="auth", data=json.dumps(notif_data))
+            user = User.objects.get(id=data["user_id"])
+            UserNotification.objects.create(user=user, notification=notification)
+    except:
+        logger.error({
+            "event_type":"notification",
+            "name": "auth",
+            "notif_data": data,
+            "message": "could not create notification for user auth action",
+            "user": data["user_id"],
+        })
+    else:
+        logger.info({
+            "event_type":"notification",
+            "name":notification.name,
+            "notif_data": notification.data,
+            "user": user.id,
+            "message": "User action notification created",
+        })
+
+
 def auth_callback(ch, method, properties, body):
     # consumer received auth queue callback
     data = json.loads(body)
     track_user(data)
-
+    # auth_notification(data)
 
 
 
@@ -65,27 +95,35 @@ def podcast_update_notification(body):
     episodes = data["new_episodes"]
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
-    notification = Notification.objects.create(
-        name = "Podcast_Update",
-        data = body
-    )
     user_notifications = []
-    for subscription in Subscribe.objects.filter(rss=podcast,notification=True):
+    users = []
+    for subscription in Subscribe.objects.filter(rss=podcast,notification=True).prefetch_related("user"):
         user_notifications.append(UserNotification(
             user = subscription.user,
             notification = notification
         ))
-    UserNotification.objects.bulk_create(user_notifications)
-    elastic.submit_record("podcast_update",{   # This has to be notification log (not podcast_update)
-        "type":"success",
-        "message": "podcast update notification created",
-    })
-    # UserNotification.objects.bulk_create([
-    #     UserNotification(
-    #         user=subscription.user,
-    #         notification=notification,
-    #     ) for subscription in Subscribe.objects.filter(rss=podcast,notification=True)
-    # ])
+        users.append(subscription.user.id)
+
+    try:
+        with transaction.atomic():
+            notification = Notification.objects.create(name="Podcast_Update", data=body)
+            UserNotification.objects.bulk_create(user_notifications)
+    except: # BUG: what exception?
+        logger.error({
+            "event_type":"notification",
+            "name": "auth",
+            "notif_body": body,
+            "user": users,
+            "message": "did not create podcast update notification",
+        })
+    else:
+        logger.info({
+            "event_type":"notification",
+            "name":"auth",
+            "notif_data": notification.data,
+            "user": users,
+            "message": "podcast update notification created",
+        })
 
 
 def podcast_update_callback(ch, method, properties, body):
@@ -120,3 +158,29 @@ if __name__ == "__main__":
 
     podcast_update.start()
     auth.start()
+
+
+
+def reconnect_on_fail(method):
+    def wrapper(self, *args, **kwargs):
+        try:
+            getattr(self, method.__name__)(*args, **kwargs)
+        except:  # BUG: Except what exception?
+            self.__init__()
+            getattr(self, method.__name__)(*args, **kwargs)
+    return wrapper
+
+class BaseConsumer:
+    def __init__(self, queue) -> None:
+        self.connection = pika.BlockingConnection(RABBIT_URL)
+        self.channel = self.connection.channel()
+        self.queue = self.channel.queue_declare(queue='auth')
+
+    def _consume(self):
+        self.channel.basic_consume(queue='auth', on_message_callback=auth_callback, auto_ack=True)
+        self.channel.start_consuming()
+
+    def consume(self):
+        while True:
+            self._consume()
+            self.__init__(queue=self.queue)

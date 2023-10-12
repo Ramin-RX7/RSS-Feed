@@ -8,13 +8,12 @@ from celery.exceptions import Retry
 from django.apps import apps
 
 from config.settings import CELERY_MAX_CONCURRENCY,CELERY_MAX_RETRY
-from core import elastic
 from core import rabbitmq
 from .models import PodcastRSS
 
 
 
-# logger = logging.getLogger('celery-logger')
+logger = logging.getLogger('elastic')
 
 
 
@@ -33,8 +32,7 @@ class PodcastRequest(Request):
             error_name = type(exc_info.exception).__name__
             message = str(exc_info.exception)
             podcast_id = self.kwargs["podcast_id"]
-            elastic.submit_record("podcast_update", {
-                "title" : "fail",
+            logger.critical({"event_type": "podcast_update",
                 "message" : "Failed to update podcast",
                 "podcast_id" : podcast_id,
                 "error_name" : error_name,
@@ -51,8 +49,7 @@ class PodcastRequest(Request):
         error_name = type(exc_info.exception.exc).__name__
         message = str(exc_info.exception.exc)
         podcast_id = self.kwargs["podcast_id"]
-        elastic.submit_record("podcast_update", {
-            "title" : "fail",
+        logger.error({"event_type": "podcast_update",
             "message" : "Failed to update podcast, retrying...",
             "podcast_id" : podcast_id,
             "error_name" : error_name,
@@ -63,8 +60,7 @@ class PodcastRequest(Request):
         return super().on_retry(exc_info)
     def on_success(self, failed__retval__runtime, **kwargs):
         # logger.info(kwargs)
-        elastic.submit_record("podcast_update", {
-            "title" : "success",
+        logger.info({"event_type": "podcast_update",
             "message" : "podcast updated",
             "podcast_id" : self.kwargs["podcast_id"],
             "args" : self.args,
