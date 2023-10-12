@@ -29,7 +29,7 @@ class BaseNotification(ABC):
         """Implements the notification sending route"""
         pre_send_data = self.pre_send(user, **pre_send_kwargs) or {}
         send_data = self.send(user, **pre_send_data) or {}
-        return self.post_send(user, **send_data) or {}
+        return self.post_send(user, **send_data) or send_data
 
 
 
