@@ -43,11 +43,10 @@ API_CALLS_PATTERN = {
 
 
 PODCAST_UPDATE_PATTERN = {
-    "status" : str,
     "message" : str,
     "podcast_id" : int,
     "args" : list,
     "kwargs" : dict,
-    "error_name" : str,      # only if status="fail"
-    "error_message" : str,   # only if status="fail"
+    "error_name" : str,      # only if level >= "warning"
+    "error_message" : str,   # only if level >= "warning"
 }
