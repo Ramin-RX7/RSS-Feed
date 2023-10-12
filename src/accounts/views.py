@@ -114,8 +114,8 @@ class UserLoginView(APIView):
         data = {
             "user_id": user.id,
             "timestamp": time.time(),
-            "message": "successful register",
-            "action" : "register",
+            "message": "successful login",
+            "action" : "login",
             "user_agent": user_agent,
             "ip": _get_remote_addr(request.headers),
         }
@@ -157,12 +157,25 @@ class RefreshTokenView(APIView):
         else:
             return Response({"message":"already authenticated"})
 
-        refresh_token = request.data.get('refresh_token')
+        # refresh_token = request.data.get('refresh_token')
         auth = JWTAuthBackend()
         jti,access_token,refresh_token = auth.get_new_tokens(request)
 
         payload = decode_jwt(refresh_token)
-        _save_cache(auth._get_user(payload), jti, auth._get_user_agent(request.headers))
+        user = auth._get_user(payload)
+        _save_cache(user, jti, auth._get_user_agent(request.headers))
+        request.user = user
+
+        elastic_data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful login with refresh token",
+            "action" : "refresh",
+            "user_agent": _get_user_agent(request.headers),
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",elastic_data)
+        rabbitmq.publish("auth", "...", elastic_data)
 
         data = {
             "access": access_token,
@@ -190,8 +203,19 @@ class LogoutView(APIView):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
-            # print(jti, user)
             auth_cache.delete(f"{user.id}|{jti}")
+
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful logout",
+                "action" : "logout",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
+
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -226,6 +250,17 @@ class ChangePassword(APIView):
         user.set_password(data["new_password"])
         user.save()
 
+        data = {
+            "user_id": user.id,
+            "timestamp": time.time(),
+            "message": "successful password change",
+            "action" : "change-password",
+            "user_agent": _get_user_agent(request.headers),
+            "ip": _get_remote_addr(request.headers),
+        }
+        elastic.submit_record("auth",data)
+        rabbitmq.publish("auth", "...", data)
+
         return Response(
                 {"detail": "password changed successfully"},
                 status=status.HTTP_202_ACCEPTED
@@ -248,6 +283,16 @@ class ResetPassword(viewsets.ViewSet):
             user.set_password(serializer.data["new_password"])
             user.save()
             auth_cache.delete(f"reset_password_{code}")
+            data = {
+                "user_id": user.id,
+                "timestamp": time.time(),
+                "message": "successful reset-password",
+                "action" : "reset=password-request",
+                "user_agent": _get_user_agent(request.headers),
+                "ip": _get_remote_addr(request.headers),
+            }
+            elastic.submit_record("auth",data)
+            rabbitmq.publish("auth", "...", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -265,7 +310,7 @@ class ResetPassword(viewsets.ViewSet):
             elastic.submit_record("auth", {
                 "user_id": user.id,
                 "timestamp": time.time(),
-                "message": f"sent email to {user.email}",
+                "message": f"successful password reset request. sent email to {user.email}",
                 "action" : "password-reset-request",
                 "user_agent": _get_user_agent(request.headers),
                 "ip": _get_remote_addr(request.headers),

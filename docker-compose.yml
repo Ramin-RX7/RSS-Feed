@@ -81,6 +81,7 @@ services:
       - 15672:15672
     env_file:
       - /src/.env
+    # healthcheck:
 
 
   consumer:
@@ -114,9 +115,8 @@ services:
       # ES_JAVA_OPTS: '-Xms256m -Xmx256m'
       network.bind_host: 0.0.0.0
       network.host: 0.0.0.0
-    # healthcheck:
-    # volumes:
-      # - elastic_data:/usr/share/elasticsearch/data
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
 
     #   cluster.name: 'docker-cluster'
     #   bootstrap.memory_lock: 'true'
@@ -144,10 +144,11 @@ services:
       - 5601:5601
     networks:
       - main
-    # volumes:
+    volumes:
+      - kibana_data:/usr/share/kibana/config
       # - ./kibana.yml:/usr/share/kibana/config/kibana.yml
     environment:
-      ELASTICSEARCH_HOSTS: "http://esearch:9200" # Replace with the URL of your Elasticsearch service
+      ELASTICSEARCH_HOSTS: "http://esearch:9200"
 
 
 
@@ -160,3 +161,5 @@ networks:
 volumes:
     postgres_data:
     redis_data:
+    elastic_data:
+    kibana_data:

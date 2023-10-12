@@ -222,9 +222,11 @@ class PodcastUpdateView(viewsets.ViewSet):
 
     @action(detail=False)
     def update_all(self, request, *args, **kwargs):
+        # Explicit podcast update request
         update_podcasts_episodes.delay()
         return Response({}, status.HTTP_202_ACCEPTED)
 
     def update_single(self, request, *args, **kwargs):
+        # Explicit podcast update request
         update_podcast.delay(podcast_id=kwargs["pk"])
         return Response({}, status.HTTP_202_ACCEPTED)
