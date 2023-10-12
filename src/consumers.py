@@ -17,7 +17,7 @@ from django.db import transaction
 from config.settings import RABBIT_URL
 
 from core import elastic
-from accounts.models import UserTracking
+from accounts.models import UserTracking,User
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
 
@@ -27,8 +27,6 @@ from interactions.models import Notification,Subscribe,UserNotification
 
 def track_user(data):
     """Save the latest login info of user in db"""
-    if data["action"] not in ("register", "login", "access", "refresh",):
-        return
     user_id = data["user_id"]
     user_track = UserTracking.objects.filter(user_id=user_id)
     if user_track.exists():
@@ -52,11 +50,35 @@ def track_user(data):
     })
 
 
+def auth_notification(data):
+    if data["action"] not in ("register", "login",):
+        return
+    with transaction.atomic():
+        notification = Notification.objects.create(name="Auth", data=json.dumps({
+            "action": data["action"],
+            "msg": f"Your latest activity: {data['action']}"
+        }))
+        user = User.objects.get(id=data["user_id"])
+        UserNotification.objects.create(user=user, notification=notification)
+        elastic.submit_record("auth", "info",{   # This has to be notification log (not podcast_update)
+            "type":"success",
+            "message": "User action notification created",
+            "user": user.id
+        })
+        return
+    elastic.submit_record("auth", "info", {   # This has to be notification log (not podcast_update)
+        "type": "fail",
+        "message": "could not create notification for user auth action",
+        "notif_body": body,
+        "user": data["user_id"],
+    })
+
+
 def auth_callback(ch, method, properties, body):
     # consumer received auth queue callback
     data = json.loads(body)
     track_user(data)
-
+    # auth_notification(data)
 
 
 
