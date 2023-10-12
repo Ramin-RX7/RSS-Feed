@@ -39,7 +39,7 @@ def track_user(data):
         user_track.last_userlogin = user_track.last_login
     user_track.save()
 
-    elastic.submit_record("auth", "info",{  # No log for failure of this function
+    elastic.submit_record("auth", "info",{
         "user_id": user_id,
         "timestamp": time.time(),
         "message": "user last activity saved",
@@ -50,25 +50,29 @@ def track_user(data):
 def auth_notification(data):
     if data["action"] not in ("register", "login",):
         return
-    with transaction.atomic():
-        notification = Notification.objects.create(name="Auth", data=json.dumps({
-            "action": data["action"],
-            "msg": f"Your latest activity: {data['action']}"
-        }))
-        user = User.objects.get(id=data["user_id"])
-        UserNotification.objects.create(user=user, notification=notification)
-        elastic.submit_record("auth", "info",{   # This has to be notification log (not podcast_update)
-            "type":"success",
-            "message": "User action notification created",
-            "user": user.id
+    notif_data = {
+        "action": data["action"],
+        "msg": f"Your latest activity: {data['action']}"
+    }
+    try:
+        with transaction.atomic():
+            notification = Notification.objects.create(name="auth", data=json.dumps(notif_data))
+            user = User.objects.get(id=data["user_id"])
+            UserNotification.objects.create(user=user, notification=notification)
+    except:
+        elastic.submit_record("notification", "error", {
+            "name": "auth",
+            "notif_data": data,
+            "message": "could not create notification for user auth action",
+            "user": data["user_id"],
         })
-        return
-    elastic.submit_record("auth", "info", {   # This has to be notification log (not podcast_update)
-        "type": "fail",
-        "message": "could not create notification for user auth action",
-        "notif_body": body,
-        "user": data["user_id"],
-    })
+    else:
+        elastic.submit_record("notification", "info",{
+            "name":notification.name,
+            "notif_data": notification.data,
+            "user": user.id,
+            "message": "User action notification created",
+        })
 
 
 def auth_callback(ch, method, properties, body):
@@ -86,25 +90,33 @@ def podcast_update_notification(body):
     episodes = data["new_episodes"]
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
-    with transaction.atomic():
-        notification = Notification.objects.create(name="Podcast_Update", data=body)
-        user_notifications = []
-        for subscription in Subscribe.objects.filter(rss=podcast,notification=True):
-            user_notifications.append(UserNotification(
-                user = subscription.user,
-                notification = notification
-            ))
-        UserNotification.objects.bulk_create(user_notifications)
-        elastic.submit_record("podcast_update", "info",{   # This has to be notification log (not podcast_update)
-            "type":"success",
+    user_notifications = []
+    users = []
+    for subscription in Subscribe.objects.filter(rss=podcast,notification=True).prefetch_related("user"):
+        user_notifications.append(UserNotification(
+            user = subscription.user,
+            notification = notification
+        ))
+        users.append(subscription.user.id)
+
+    try:
+        with transaction.atomic():
+            notification = Notification.objects.create(name="Podcast_Update", data=body)
+            UserNotification.objects.bulk_create(user_notifications)
+    except: # BUG: what exception?
+        elastic.submit_record("notification", "error", {
+            "name": "auth",
+            "notif_body": body,
+            "user": users,
+            "message": "did not create podcast update notification",
+        })
+    else:
+        elastic.submit_record("notification", "info",{
+            "name":"auth",
+            "notif_data": notification.data,
+            "user": users,
             "message": "podcast update notification created",
         })
-        return
-    elastic.submit_record("podcast_update", "info", {   # This has to be notification log (not podcast_update)
-        "type": "fail",
-        "message": "did not create podcast update notification",
-        "notif_body": body
-    })
 
 
 def podcast_update_callback(ch, method, properties, body):
