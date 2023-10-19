@@ -40,7 +40,7 @@ def track_user(data):
     })
     if user_track.login_type == "login":
         user_track.last_userlogin = user_track.last_login
-    user_track.save()
+        user_track.save()
 
     logger.info({
         "event_type": "auth",
