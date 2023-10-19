@@ -41,7 +41,7 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
 
 
 _login_types = models.TextChoices("login_type","login refresh access other register")
-class UserTracking(models.Model):
+class UserTracking(BaseModel):
     user_id = models.IntegerField(editable=False,primary_key=True)
     last_login = models.DateTimeField()
     last_userlogin = models.DateTimeField()
