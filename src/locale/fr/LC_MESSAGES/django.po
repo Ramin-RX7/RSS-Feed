@@ -1,0 +1,143 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-20 18:41+0000\n"
+"PO-Revision-Date: 2023-10-20 22:33+0330\n"
+"Last-Translator:   <admin@admin.admin>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Translated-Using: django-rosetta 0.9.9\n"
+
+#: accounts/auth_backends/jwt/__init__.py:41
+msgid "user-agent header is not provided"
+msgstr "l'en-tête de l'agent utilisateur n'est pas fourni"
+
+#: accounts/auth_backends/jwt/__init__.py:47
+msgid "No access token"
+msgstr "Pas de jeton d'accès"
+
+#: accounts/auth_backends/jwt/__init__.py:50
+msgid "Token prefix missing"
+msgstr "Préfixe de jeton manquant"
+
+#: accounts/auth_backends/jwt/__init__.py:57
+msgid "Access token expired"
+msgstr "Jeton d'accès expiré"
+
+#: accounts/auth_backends/jwt/__init__.py:59
+#: accounts/auth_backends/jwt/__init__.py:117
+msgid "invalid refresh token"
+msgstr "jeton d'actualisation invalide"
+
+#: accounts/auth_backends/jwt/__init__.py:64
+msgid "User identifier not found"
+msgstr "Identifiant utilisateur introuvable"
+
+#: accounts/auth_backends/jwt/__init__.py:78
+msgid "Not Found in cache, login again."
+msgstr "Introuvable dans le cache, connectez-vous à nouveau."
+
+#: accounts/auth_backends/jwt/__init__.py:81
+msgid "Invalid refresh token, please login again."
+msgstr "Jeton d'actualisation invalide, veuillez vous reconnecter."
+
+#: accounts/auth_backends/jwt/__init__.py:107
+msgid "Authentication credentials were not provided."
+msgstr "Les informations d'authentification n'ont pas été fournies."
+
+#: accounts/auth_backends/jwt/__init__.py:115
+msgid "Expired refresh token, please login again."
+msgstr "Jeton d'actualisation expiré, veuillez vous reconnecter."
+
+#: accounts/serializers.py:25 accounts/serializers.py:56
+#: accounts/serializers.py:74
+msgid "Passwords don't match"
+msgstr "Les mots de passe ne correspondent pas"
+
+#: accounts/serializers.py:51 accounts/serializers.py:69
+msgid "Password must have length between 6-125"
+msgstr "Le mot de passe doit avoir une longueur comprise entre 6 et 125"
+
+#: accounts/views.py:114
+msgid "Invalid Credentials"
+msgstr "Les informations d'identification invalides"
+
+#: accounts/views.py:167
+msgid "already authenticated"
+msgstr "déjà authentifié"
+
+#: accounts/views.py:236
+msgid "{type(e)}: {e}"
+msgstr "error occured!!! {e}"
+
+#: accounts/views.py:256
+msgid "invalid password"
+msgstr "invalid password"
+
+#: accounts/views.py:261
+msgid "new password can not be same as old password"
+msgstr ""
+"le nouveau mot de passe ne peut pas être identique à l'ancien mot de passe"
+
+#: accounts/views.py:283
+msgid "password changed successfully"
+msgstr "Le mot de passe a été changé avec succès"
+
+#: accounts/views.py:324
+msgid "email field not provided"
+msgstr "champ email non fourni"
+
+#: accounts/views.py:344
+msgid "ok"
+msgstr "d'accord"
+
+#: config/settings/django_settings/__init__.py:97
+msgid "English"
+msgstr "English"
+
+#: config/settings/django_settings/__init__.py:98
+msgid "French"
+msgstr "French"
+
+#: config/settings/django_settings/__init__.py:99
+msgid "Spanish"
+msgstr "Spanish"
+
+#: interactions/views.py:33 podcasts/views.py:183
+msgid "already liked"
+msgstr "déjà aimé"
+
+#: interactions/views.py:40 podcasts/views.py:192
+msgid "not liked yet"
+msgstr "pas encore aimé"
+
+#: interactions/views.py:42 podcasts/views.py:196
+msgid "Like removed successfully."
+msgstr "Comme supprimé avec succès."
+
+#: interactions/views.py:70
+msgid "Episode not found."
+msgstr "Épisode introuvable."
+
+#: interactions/views.py:95
+msgid "Subscribe removed successfully."
+msgstr "Abonnez-vous supprimé avec succès."
+
+#: podcasts/views.py:161 podcasts/views.py:177 podcasts/views.py:189
+msgid "login required"
+msgstr "Connexion requise"
+
+#: podcasts/views.py:211
+msgid "Recommendation method not found"
+msgstr "Méthode de recommandation introuvable"

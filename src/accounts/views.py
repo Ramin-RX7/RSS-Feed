@@ -3,6 +3,7 @@ import uuid
 import logging
 
 from django.core.cache import caches
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -71,7 +72,7 @@ class UserRegisterView(CreateAPIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
         return response
 
 
@@ -110,7 +111,7 @@ class UserLoginView(APIView):
 
         user = LoginAuthBackend().authenticate(request, username=username, password=password)
         if user is None:  #? should we save invalid login attempts?
-            return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': _('Invalid Credentials')}, status=status.HTTP_400_BAD_REQUEST)
 
         jti,access_token,refresh_token = generate_tokens(username)
 
@@ -128,7 +129,7 @@ class UserLoginView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", data)
+        rabbitmq.publish("auth", data)
 
         data = {
             "access": access_token,
@@ -163,7 +164,7 @@ class RefreshTokenView(APIView):
         except:
             pass
         else:
-            return Response({"message":"already authenticated"})
+            return Response({"message":_("already authenticated")})
 
         # refresh_token = request.data.get('refresh_token')
         auth = JWTAuthBackend()
@@ -186,7 +187,7 @@ class RefreshTokenView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", elastic_data)
+        rabbitmq.publish("auth", elastic_data)
 
         data = {
             "access": access_token,
@@ -228,11 +229,11 @@ class LogoutView(APIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
 
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": _(f"{type(e)}: {e}")}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -252,12 +253,12 @@ class ChangePassword(APIView):
 
         if not user.check_password(data["old_password"]):
             return Response(
-                {"detail": "invalid password"},
+                {"detail": _("invalid password")},
                 status=status.HTTP_406_NOT_ACCEPTABLE
             )
         if user.check_password(data["new_password"]):
             return Response(
-                {"detail": "new password can not be same as old password"},
+                {"detail": _("new password can not be same as old password")},
                 status=status.HTTP_406_NOT_ACCEPTABLE
             )
 
@@ -276,10 +277,10 @@ class ChangePassword(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", data)
+        rabbitmq.publish("auth", data)
 
         return Response(
-                {"detail": "password changed successfully"},
+                {"detail": _("password changed successfully")},
                 status=status.HTTP_202_ACCEPTED
             )
 
@@ -312,7 +313,7 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -320,7 +321,7 @@ class ResetPassword(viewsets.ViewSet):
     def reset_password_request(self, request):
         email = request.POST.get("email")
         if not email:
-            return Response({"detail":"email field not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":_("email field not provided")}, status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter(email=email)
         if user.exists():
             user = user.get()
@@ -339,5 +340,5 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
-        return Response({"send":"ok"}, status=status.HTTP_200_OK)
+            rabbitmq.publish("auth", data)
+        return Response({"send":_("ok")}, status=status.HTTP_200_OK)
