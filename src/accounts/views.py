@@ -186,7 +186,7 @@ class RefreshTokenView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", elastic_data)
+        rabbitmq.publish("auth", elastic_data)
 
         data = {
             "access": access_token,
