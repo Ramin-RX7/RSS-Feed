@@ -1,5 +1,8 @@
 import pytz
 
+from django.utils.translation import gettext_lazy as _
+
+
 from ..base import *
 
 from .apps import *
@@ -14,6 +17,7 @@ ALLOWED_HOSTS = []
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'django.middleware.locale.LocaleMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -86,6 +90,14 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
+LOCALE_PATHS = [
+    BASE_DIR / 'locale/',
+]
+LANGUAGES = (
+    ('en', _('English')),
+    ('fr', _('French')),
+    ('es', _('Spanish')),
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
