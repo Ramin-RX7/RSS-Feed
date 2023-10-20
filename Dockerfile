@@ -8,7 +8,6 @@ RUN apt update && apt install gettext -y
 
 RUN python -m pip install -r requirements.txt
 
-RUN django-admin makemessages --all --ignore=env
 RUN django-admin compilemessages --ignore=env
 
 EXPOSE 8000
