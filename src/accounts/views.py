@@ -71,7 +71,7 @@ class UserRegisterView(CreateAPIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
         return response
 
 
@@ -128,7 +128,7 @@ class UserLoginView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", data)
+        rabbitmq.publish("auth", data)
 
         data = {
             "access": access_token,
@@ -228,7 +228,7 @@ class LogoutView(APIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
 
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
@@ -276,7 +276,7 @@ class ChangePassword(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", data)
+        rabbitmq.publish("auth", data)
 
         return Response(
                 {"detail": "password changed successfully"},
@@ -312,7 +312,7 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -339,5 +339,5 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            rabbitmq.publish("auth", data)
         return Response({"send":"ok"}, status=status.HTTP_200_OK)
