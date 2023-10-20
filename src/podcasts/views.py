@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 from rest_framework import generics,status,viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
@@ -158,7 +158,7 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
 
     def get_user(self, request):
         if not (auth:=JWTAuthBackend().authenticate(request)):
-            return Response({"details":"login required"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         user = auth[0]
         if user.is_authenticated:
             return user
@@ -174,26 +174,26 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     def like(self, request, *args, **kwargs):
         user = self.get_user(request)
         if user is None:
-            return Response({"details":"login required"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         episode = self.get_object()
         like,created = Like.objects.get_or_create(user=user, episode=episode)
         if created:
             serializer = LikeSerializer(like)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({"details":"already liked"}, status=status.HTTP_208_ALREADY_REPORTED)
+        return Response({"details":_("already liked")}, status=status.HTTP_208_ALREADY_REPORTED)
 
     @action(detail=True)
     def unlike(self, request, *args, **kwargs):
         user = self.get_user(request)
         if user is None:
-            return Response({"details":"login required"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         like_qs = Like.objects.filter(user=user, episode=self.get_object())
         if not like_qs.exists():
-            return Response({'detail': 'not liked yet'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response({'detail': _('not liked yet')}, status=status.HTTP_406_NOT_ACCEPTABLE)
         # for like in like_qs:
         #     like.delete()
         like_qs.get().delete()
-        return Response({'detail': 'Like removed successfully.'}, status=status.HTTP_202_ACCEPTED)
+        return Response({'detail': _('Like removed successfully.')}, status=status.HTTP_202_ACCEPTED)
 
 
 
@@ -208,7 +208,7 @@ class PodcastRecommendationView(APIView):
 
     def get(self, request, method):
         if method not in self.recommendations_methods:
-            return Response({"details":"Recommendation method not found"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"details":_("Recommendation method not found")}, status=status.HTTP_400_BAD_REQUEST)
         user = request.user
         function = self.recommendations_methods[method]
         return Response(function(user))
