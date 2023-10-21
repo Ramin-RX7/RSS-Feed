@@ -45,10 +45,10 @@ class JWTAuthBackend(BaseAuthentication):
         auth_header = request.headers.get(self.authentication_header_name)
         if not auth_header:
             raise exceptions.PermissionDenied(_("No access token"))
-        prefix,token = auth_header.split(' ')
-        if prefix != self.authentication_header_prefix:
+        full_token = auth_header.split(' ')
+        if (len(full_token) != 2) or (full_token[0] != self.authentication_header_prefix):
             raise exceptions.PermissionDenied(_('Token prefix missing'))
-        return token
+        return full_token[1]
 
     def _validate_access_token(self, token):
         try:
@@ -56,7 +56,7 @@ class JWTAuthBackend(BaseAuthentication):
         except jwt.ExpiredSignatureError:
             raise exceptions.NotAuthenticated(_('Access token expired')) from None
         except jwt.DecodeError:
-            raise exceptions.ParseError(_("invalid refresh token"))
+            raise exceptions.ParseError(_("invalid access token"))
 
     def _get_username(self, payload):
         username = payload.get('username')
