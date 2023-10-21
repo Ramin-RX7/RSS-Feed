@@ -56,7 +56,7 @@ class JWTAuthBackend(BaseAuthentication):
         except jwt.ExpiredSignatureError:
             raise exceptions.NotAuthenticated(_('Access token expired')) from None
         except jwt.DecodeError:
-            raise exceptions.ParseError(_("invalid refresh token"))
+            raise exceptions.ParseError(_("invalid access token"))
 
     def _get_username(self, payload):
         username = payload.get('username')
