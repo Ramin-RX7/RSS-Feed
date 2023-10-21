@@ -11,7 +11,7 @@ from rest_framework.generics import CreateAPIView,RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from core import rabbitmq
+from core.rabbitmq import RabbitMQ
 from core.utils import get_nows
 from podcasts.utils import get_user_recommendations
 from interactions.models import Subscribe,Like
@@ -74,7 +74,7 @@ class UserRegisterView(CreateAPIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", data)
+            RabbitMQ.publish_s("auth", data)
         return response
 
 
@@ -131,7 +131,7 @@ class UserLoginView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", data)
+        RabbitMQ.publish_s("auth", data)
 
         data = {
             "access": access_token,
@@ -189,7 +189,7 @@ class RefreshTokenView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", elastic_data)
+        RabbitMQ.publish_s("auth", elastic_data)
 
         data = {
             "access": access_token,
@@ -231,7 +231,7 @@ class LogoutView(APIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", data)
+            RabbitMQ.publish_s("auth", data)
 
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
@@ -279,7 +279,7 @@ class ChangePassword(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", data)
+        RabbitMQ.publish_s("auth", data)
 
         return Response(
                 {"detail": _("password changed successfully")},
@@ -315,7 +315,7 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", data)
+            RabbitMQ.publish_s("auth", data)
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -342,7 +342,7 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", data)
+            RabbitMQ.publish_s("auth", data)
         return Response({"send":_("ok")}, status=status.HTTP_200_OK)
 
 
