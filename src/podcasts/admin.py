@@ -45,12 +45,29 @@ class PodcastRSSAdmin(admin.ModelAdmin):
 
 @admin.register(models.PodcastRSS)
 class PodcastRSSAdmin(admin.ModelAdmin):
+    list_display = ["__str__", "view_episodes", "link", "updated_at", "created_at",]
     autocomplete_fields = ["main_fields_path", "episode_attributes_path"]
     fields = ["name", "url", "main_fields_path", "episode_attributes_path"]
-    # readonly_fields = ["title"]
+    readonly_fields = ('view_episodes',)
+    actions = ["update_rss_action",]
+    search_fields = ["name", "main_fields__title"]
 
-    # def get_form(self, request, obj=None, **kwargs):
-        # if obj is None:
-            # return super().get_form()
-        # else:
-            # return forms.CreateRSSForm
+    @admin.action(description="Update selected podcasts")
+    def update_rss_action(self, request, queryset):
+        for rss in queryset:
+            update_podcast.delay(podcast_id=rss.id)
+        self.message_user(
+            request,
+            'Update request for selected podcast has been sent',
+            level=messages.SUCCESS
+        )
+
+    def link(self, obj):
+        link = f'<a href="{obj.url}" target="_blank">View RSS</a>'
+        return format_html(link)
+
+    def view_episodes(self, obj):
+        url = reverse(f'admin:{models.PodcastEpisode._meta.app_label}_{models.PodcastEpisode._meta.model_name}_changelist')
+        link = f'<a href="{url}?rss__id__exact={obj.pk}">View Episodes</a>'
+        return format_html(link)
+    view_episodes.short_description = 'Episodes'
