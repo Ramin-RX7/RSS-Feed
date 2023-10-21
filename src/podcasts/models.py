@@ -99,7 +99,7 @@ class PodcastRSS(BaseModel):
 class PodcastEpisode(BaseModel):
     rss = models.ForeignKey(PodcastRSS, on_delete=models.CASCADE)
     # Required fields
-    title = models.CharField(max_length=75)
+    title = models.CharField(max_length=150)
     duration = models.PositiveIntegerField()
     audio_file = models.CharField(max_length=300)     # URLField
     publish_date = models.PositiveIntegerField()
