@@ -1,4 +1,3 @@
-import time
 import uuid
 import logging
 
@@ -23,6 +22,9 @@ from .auth_backends import LoginAuthBackend, JWTAuthBackend
 from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent,_get_remote_addr
 from .models import User
 from .tasks import send_reset_password_email
+from .permissions import IsOwner
+
+
 
 
 auth_cache = caches["auth"]
@@ -213,7 +215,7 @@ class LogoutView(APIView):
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    def get(self, request):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
@@ -372,3 +374,34 @@ class ProfileView(viewsets.ViewSet, RetrieveUpdateAPIView):
     def recommendations(self, request, *args, **kwargs):
         user = self.get_object()
         return Response(get_user_recommendations(user), status.HTTP_200_OK)
+
+
+
+class ActiveSessionsView(viewsets.ViewSet):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        sessions = {}
+        for session in auth_cache.keys(f"{user.id}|*"):
+            jti = session.split("|")[1]
+            sessions[jti] = auth_cache.get(session)
+        return Response(sessions)
+
+    def logout(self, request, session_code, *args, **kwargs):
+        auth_cache.delete(f"{request.user.id}|{session_code}")
+        return Response({}, status.HTTP_202_ACCEPTED)
+
+    def logout_others(self, request, *args, **kwargs):
+        current_jti = request.auth.get("jti")
+        print(current_jti)
+        for session in auth_cache.keys(f"{request.user.id}|*"):
+            if session == f"{request.user.id}|{current_jti}":
+                continue
+            auth_cache.delete(session)
+        return Response({}, status.HTTP_202_ACCEPTED)
+    def logout_all(self, request, *args, **kwargs):
+        for session in auth_cache.keys(f"{request.user.id}|*"):
+            auth_cache.delete(session)
+        return Response({}, status.HTTP_202_ACCEPTED)
