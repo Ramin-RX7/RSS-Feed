@@ -8,14 +8,13 @@ from rest_framework.decorators import (action,authentication_classes as auth_cla
 
 
 from core.parser import *
-from core.views import EpisodeListView,EpisodeDetailView
+from core.views import EpisodeListView
 from accounts.auth_backends import JWTAuthBackend
 from accounts.models import User
-from interactions.models import Like
-from interactions.serializers import LikeSerializer
+from interactions.models import Like,Subscribe,Comment
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
-from .utils import like_based_recomended_podcasts,subscription_based_recommended_podcasts
+from .utils import like_based_recommended_podcasts,subscription_based_recommended_podcasts
 from .tasks import update_podcasts_episodes,update_podcast
 
 
@@ -60,7 +59,7 @@ class PodcastListView(generics.ListAPIView):
 
 
 
-class PodcastDetailView(generics.RetrieveAPIView):
+class PodcastDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     """
     Retrieve Podcast Details.
 
@@ -90,6 +89,35 @@ class PodcastDetailView(generics.RetrieveAPIView):
     queryset = PodcastRSS.objects.all()
     serializer_class = PodcastRSSSerializer
 
+    def get_user(self, request):
+        if not (auth:=JWTAuthBackend().authenticate(request)):
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        user = auth[0]
+        if user.is_authenticated:
+            return user
+
+    @action(detail=True)
+    def subscribe(self, request, pk):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        rss = self.get_object()
+        subscribe,created = Subscribe.objects.get_or_create(user=user, rss=rss)
+        if created:
+            # serializer = SubscribeSerializer(subscribe)
+            return Response({}, status=status.HTTP_201_CREATED)
+        return Response({"details":_("already subscribed")}, status=status.HTTP_208_ALREADY_REPORTED)
+
+    @action(detail=True)
+    def unsubscribe(self, request, pk):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        subs_qs = Subscribe.objects.filter(user=user, rss=self.get_object())
+        if not subs_qs.exists():
+            return Response({'detail': _('not subscribed yet')}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        subs_qs.get().delete()
+        return Response({'detail': _('Subscribe removed successfully.')}, status=status.HTTP_202_ACCEPTED)
 
 
 
