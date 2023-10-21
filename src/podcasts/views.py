@@ -206,26 +206,35 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     def like(self, request, *args, **kwargs):
         user = self.get_user(request)
         if user is None:
-            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         episode = self.get_object()
         like,created = Like.objects.get_or_create(user=user, episode=episode)
         if created:
-            serializer = LikeSerializer(like)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({"details":_("already liked")}, status=status.HTTP_208_ALREADY_REPORTED)
+            # serializer = LikeSerializer(like)
+            return Response({}, status=status.HTTP_201_CREATED)
+        return Response({"detail":_("already liked")}, status=status.HTTP_208_ALREADY_REPORTED)
 
     @action(detail=True)
     def unlike(self, request, *args, **kwargs):
         user = self.get_user(request)
         if user is None:
-            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         like_qs = Like.objects.filter(user=user, episode=self.get_object())
         if not like_qs.exists():
             return Response({'detail': _('not liked yet')}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        # for like in like_qs:
-        #     like.delete()
         like_qs.get().delete()
         return Response({'detail': _('Like removed successfully.')}, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True)
+    def comment(self, request, *args, **kwargs):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        if content:=request.data.get("content"):
+            Comment.objects.create(user=user, content=content, episode=self.get_object())
+            return Response({}, status.HTTP_201_CREATED)
+        return Response({"detail":_("comment content not provided")}, status.HTTP_406_NOT_ACCEPTABLE)
+
 
 
 
