@@ -119,6 +119,10 @@ class PodcastDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
         subs_qs.get().delete()
         return Response({'detail': _('Subscribe removed successfully.')}, status=status.HTTP_202_ACCEPTED)
 
+    @action(detail=False)
+    def subscribers(self, request, pk):
+        subscribers_list = Subscribe.objects.filter(rss=self.get_object()).values_list("user__id", flat=True)
+        return Response({"users":subscribers_list})
 
 
 class PodcastEpisodeListView(EpisodeListView):
