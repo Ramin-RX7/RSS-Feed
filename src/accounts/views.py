@@ -7,12 +7,14 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView,RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from core import rabbitmq
 from core.utils import get_nows
+from podcasts.utils import get_user_recommendations
+from interactions.models import Subscribe,Like
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
@@ -342,3 +344,31 @@ class ResetPassword(viewsets.ViewSet):
             })
             rabbitmq.publish("auth", data)
         return Response({"send":_("ok")}, status=status.HTTP_200_OK)
+
+
+
+class ProfileView(viewsets.ViewSet, RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    lookup_field = 'username'
+    lookup_url_kwarg = 'username'
+    serializer_class = UserRegisterSerializer
+
+    @action(detail=False)
+    def subscriptions(self, request, *args, **kwargs):
+        query_results = Subscribe.objects.filter(user=self.get_object()).values(
+            "rss__id", "notification").prefetch_related("rss")
+        result_list = [{"id": item["rss__id"], "notification": item["notification"]} for item in query_results]
+        return Response(
+            result_list,
+            status.HTTP_200_OK
+        )
+
+    @action(detail=False)
+    def likes(self, request, *args, **kwargs):
+        qs = Like.objects.filter(user=self.get_object()).values_list("episode", flat=True)
+        return Response(qs, status.HTTP_200_OK)
+
+    @action(detail=False)
+    def recommendations(self, request, *args, **kwargs):
+        user = self.get_object()
+        return Response(get_user_recommendations(user), status.HTTP_200_OK)
