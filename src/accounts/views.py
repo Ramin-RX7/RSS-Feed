@@ -316,7 +316,7 @@ class ResetPassword(viewsets.ViewSet):
                 "event_type":"auth",
             })
             RabbitMQ.publish_s("auth", data)
-            return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({}, status=status.HTTP_202_ACCEPTED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
     @action(detail=True, methods=["POST"])
