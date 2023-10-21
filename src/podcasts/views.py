@@ -112,6 +112,34 @@ class PodcastDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
         subscribers_list = Subscribe.objects.filter(rss=self.get_object()).values_list("user__id", flat=True)
         return Response({"users":subscribers_list})
 
+    @auth_action
+    def notify_on(self, request, pk):
+        rss = self.get_object()
+        subscribe,created = Subscribe.objects.get_or_create(user=request.user, rss=rss)
+        print(subscribe.notification)
+        if subscribe.notification == True:
+            return Response({"detail":_("notification is already on for this podcast")},
+                            status=status.HTTP_208_ALREADY_REPORTED)
+        subscribe.notification = True
+        subscribe.save()
+        if created:
+            return Response({"detail":_("subscribed with notification on")}, status=status.HTTP_201_CREATED)
+        return Response({"detail":_("turned notification on")}, status.HTTP_202_ACCEPTED)
+
+    @auth_action
+    def notify_off(self, request, pk):
+        rss = self.get_object()
+        subscribe = Subscribe.objects.filter(user=request.user, rss=rss)
+        if subscribe.exists():
+            subscribe = subscribe.get()
+            if subscribe.notification is False:
+                return Response({"detail":_("notification is already off for this podcast")},
+                            status=status.HTTP_208_ALREADY_REPORTED)
+            subscribe.notification = False
+            subscribe.save()
+            return Response({"detail":_("turned notification off")}, status.HTTP_202_ACCEPTED)
+        return Response({"detail":_("not subscribed yet")}, status=status.HTTP_201_CREATED)
+
 
 class PodcastEpisodeListView(EpisodeListView):
     """
