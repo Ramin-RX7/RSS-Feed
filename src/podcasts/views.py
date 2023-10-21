@@ -204,7 +204,7 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     queryset = PodcastEpisode.objects.all()
     serializer_class = PodcastEpisodeSerializer
 
-    @action(detail=False)
+    @action(detail=True)
     def likes(self, request, *args, **kwargs):
         qs = Like.objects.filter(episode=self.get_object())
         users = qs.values_list("user", flat=True)
@@ -233,6 +233,13 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
             Comment.objects.create(user=request.user, content=content, episode=self.get_object())
             return Response({}, status.HTTP_201_CREATED)
         return Response({"detail":_("comment content not provided")}, status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=True)
+    def comments(self, request, *args, **kwargs):
+        return Response(
+            list(Comment.objects.filter(episode=self.get_object()).values(
+                "user","content","created_at")
+        ))
 
 
 
