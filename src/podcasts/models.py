@@ -7,6 +7,7 @@ from core.parser import *
 
 
 class PodcastEpisodePaths(models.Model):
+    route_name = models.CharField(max_length=50)
     audio_file = models.CharField(max_length=100)
     duration = models.CharField(max_length=100)
     title = models.CharField(max_length=100)
@@ -19,9 +20,12 @@ class PodcastEpisodePaths(models.Model):
     image = models.CharField(max_length=100, null=True, blank=True)
     # guests = models.CharField(max_length=100, null=True, blank=True)
 
+    def __str__(self) -> str:
+        return f'"{self.route_name}" episode router'
 
 
 class PodcastRSSPaths(models.Model):
+    route_name = models.CharField(max_length=50)
     title = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)
@@ -35,6 +39,9 @@ class PodcastRSSPaths(models.Model):
     copyright = models.CharField(max_length=100, null=True, blank=True)
     language = models.CharField(max_length=100, null=True, blank=True)
     link = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f'"{self.route_name}" main field router'
 
 
 
@@ -84,8 +91,8 @@ class PodcastRSS(BaseModel):
             # raise SystemError()
         return super().save()
 
-    # def __str__(self):
-        # return f"{self.name} ({self.main_fields.title})"
+    def __str__(self):
+        return f"{self.name} ({self.main_fields.title})"
 
 
 

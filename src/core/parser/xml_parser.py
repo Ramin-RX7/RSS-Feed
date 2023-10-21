@@ -31,6 +31,8 @@ class RSSXMLParser:
 
         for field in self.rss_path_object._meta.fields:
             field_name = field.name
+            if field_name == "route_name":
+                continue
 
             try:
                 if attr:=getattr(paths, field_name):
@@ -69,6 +71,8 @@ class EpisodeXMLParser:
 
         for field in self.episode_paths._meta.fields:
             field_name = field.name
+            if field_name == "route_name":
+                continue
             try:
                 if attr:=getattr(self.episode_paths, field_name):
                     route:list = attr.split(" ")
