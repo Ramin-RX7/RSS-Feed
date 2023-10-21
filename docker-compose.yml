@@ -152,6 +152,23 @@ services:
 
 
 
+  nginx:
+    container_name: nginx
+    build:
+      context: ./docker/nginx/
+      dockerfile: ./Dockerfile
+    depends_on:
+      - app
+    ports:
+      - 80:80
+    networks:
+      - main
+    restart: always
+    # volumes:
+    #   -
+
+
+
 networks:
     main:
 
