@@ -28,7 +28,7 @@ def subscription_based_recommended_podcasts(user):
 
 
 
-def like_based_recomended_podcasts(user):
+def like_based_recommended_podcasts(user):
     all_podcasts = PodcastRSS.objects.all()
     user_liked_podcasts = all_podcasts.filter(podcastepisode__like__user=user)
 

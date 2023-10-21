@@ -243,7 +243,7 @@ class PodcastRecommendationView(APIView):
     permission_classes = (IsAuthenticated,)
 
     recommendations_methods = {
-        "likes": like_based_recomended_podcasts,
+        "likes": like_based_recommended_podcasts,
         "subscriptions": subscription_based_recommended_podcasts,
     }
 
