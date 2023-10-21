@@ -8,14 +8,13 @@ from rest_framework.decorators import (action,authentication_classes as auth_cla
 
 
 from core.parser import *
-from core.views import EpisodeListView,EpisodeDetailView
+from core.views import EpisodeListView
 from accounts.auth_backends import JWTAuthBackend
 from accounts.models import User
-from interactions.models import Like
-from interactions.serializers import LikeSerializer
+from interactions.models import Like,Subscribe,Comment
 from .models import PodcastRSS,PodcastEpisode
 from .serializers import PodcastRSSSerializer,PodcastEpisodeSerializer
-from .utils import like_based_recomended_podcasts,subscription_based_recommended_podcasts
+from .utils import like_based_recommended_podcasts,subscription_based_recommended_podcasts
 from .tasks import update_podcasts_episodes,update_podcast
 
 
@@ -60,7 +59,7 @@ class PodcastListView(generics.ListAPIView):
 
 
 
-class PodcastDetailView(generics.RetrieveAPIView):
+class PodcastDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     """
     Retrieve Podcast Details.
 
@@ -90,7 +89,40 @@ class PodcastDetailView(generics.RetrieveAPIView):
     queryset = PodcastRSS.objects.all()
     serializer_class = PodcastRSSSerializer
 
+    def get_user(self, request):
+        if not (auth:=JWTAuthBackend().authenticate(request)):
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        user = auth[0]
+        if user.is_authenticated:
+            return user
 
+    @action(detail=True)
+    def subscribe(self, request, pk):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        rss = self.get_object()
+        subscribe,created = Subscribe.objects.get_or_create(user=user, rss=rss)
+        if created:
+            # serializer = SubscribeSerializer(subscribe)
+            return Response({}, status=status.HTTP_201_CREATED)
+        return Response({"details":_("already subscribed")}, status=status.HTTP_208_ALREADY_REPORTED)
+
+    @action(detail=True)
+    def unsubscribe(self, request, pk):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        subs_qs = Subscribe.objects.filter(user=user, rss=self.get_object())
+        if not subs_qs.exists():
+            return Response({'detail': _('not subscribed yet')}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        subs_qs.get().delete()
+        return Response({'detail': _('Subscribe removed successfully.')}, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=False)
+    def subscribers(self, request, pk):
+        subscribers_list = Subscribe.objects.filter(rss=self.get_object()).values_list("user__id", flat=True)
+        return Response({"users":subscribers_list})
 
 
 class PodcastEpisodeListView(EpisodeListView):
@@ -174,26 +206,35 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     def like(self, request, *args, **kwargs):
         user = self.get_user(request)
         if user is None:
-            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         episode = self.get_object()
         like,created = Like.objects.get_or_create(user=user, episode=episode)
         if created:
-            serializer = LikeSerializer(like)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({"details":_("already liked")}, status=status.HTTP_208_ALREADY_REPORTED)
+            # serializer = LikeSerializer(like)
+            return Response({}, status=status.HTTP_201_CREATED)
+        return Response({"detail":_("already liked")}, status=status.HTTP_208_ALREADY_REPORTED)
 
     @action(detail=True)
     def unlike(self, request, *args, **kwargs):
         user = self.get_user(request)
         if user is None:
-            return Response({"details":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
         like_qs = Like.objects.filter(user=user, episode=self.get_object())
         if not like_qs.exists():
             return Response({'detail': _('not liked yet')}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        # for like in like_qs:
-        #     like.delete()
         like_qs.get().delete()
         return Response({'detail': _('Like removed successfully.')}, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True)
+    def comment(self, request, *args, **kwargs):
+        user = self.get_user(request)
+        if user is None:
+            return Response({"detail":_("login required")}, status=status.HTTP_403_FORBIDDEN)
+        if content:=request.data.get("content"):
+            Comment.objects.create(user=user, content=content, episode=self.get_object())
+            return Response({}, status.HTTP_201_CREATED)
+        return Response({"detail":_("comment content not provided")}, status.HTTP_406_NOT_ACCEPTABLE)
+
 
 
 
@@ -202,7 +243,7 @@ class PodcastRecommendationView(APIView):
     permission_classes = (IsAuthenticated,)
 
     recommendations_methods = {
-        "likes": like_based_recomended_podcasts,
+        "likes": like_based_recommended_podcasts,
         "subscriptions": subscription_based_recommended_podcasts,
     }
 

@@ -104,11 +104,8 @@ class SubscribeView(generics.ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         """
         {
-            "podcasts": [PODCAST_ID, ]
+            "podcasts": [PODCAST_ID, ...]
         }
         """
-        # subscriptions = Subscribe.objects.filter(user=request.user)
-        # subscriptions = self.serializer_class(subscriptions, many=True)
-        # return Response({'podcasts': list(subscriptions.data)}, status=status.HTTP_200_OK)
         subscriptions = Subscribe.objects.filter(user=request.user).values_list("rss__id", flat=True)
         return Response({'podcasts': list(subscriptions)}, status=status.HTTP_200_OK)
