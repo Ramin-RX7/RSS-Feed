@@ -11,7 +11,7 @@ from .logging import *
 
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 MIDDLEWARE = [
