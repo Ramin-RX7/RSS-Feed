@@ -5,3 +5,4 @@ from .database import *
 from .caches import *
 from .rabbitmq import *
 from .elastic import *
+from .minio import *
