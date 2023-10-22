@@ -169,6 +169,22 @@ services:
 
 
 
+  minio:
+    container_name: minio
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    #   - 9001:9001
+    volumes:
+      - /static
+    command: server /data
+    networks:
+      - main
+    restart: always
+    env_file:
+      - /src/.env
+
+
 networks:
     main:
 
