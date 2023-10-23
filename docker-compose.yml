@@ -8,8 +8,10 @@ services:
       - /src/.env
     networks:
       - main
-    ports:
-      - 5432:5432
+    # ports:
+    #   - 5432:5432
+    expose:
+      - 5432
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -26,8 +28,10 @@ services:
     depends_on:
       - postgres
       - rabbit
-    ports:
-      - 8000:8000
+    # ports:
+    #   - 8000:8000
+    expose:
+      - 8000
     networks:
       - main
     restart: always
@@ -76,9 +80,12 @@ services:
     restart: always
     networks:
       - main
-    ports:
-      - 5672:5672
-      - 15672:15672
+    # ports:
+    #   - 5672:5672
+    #   - 15672:15672
+    expose:
+      - 5672
+      - 15672
     env_file:
       - /src/.env
     # healthcheck:
@@ -102,9 +109,12 @@ services:
   esearch:
     mem_limit: 512m
     image: elasticsearch:7.14.2
-    ports:
-      - 9200:9200
-      - 9300:9300
+    # ports:
+    #   - 9200:9200
+    #   - 9300:9300
+    expose:
+      - 9200
+      - 9300
     networks:
       - main
     environment:
@@ -175,6 +185,9 @@ services:
     ports:
       - "9000:9000"
     #   - 9001:9001
+    # expose:
+    #   - 9000
+    #   - 9001
     volumes:
       - /static
     command: server /data
@@ -183,6 +196,11 @@ services:
     restart: always
     env_file:
       - /src/.env
+    # volumes:
+    #   - ./minio/data:/data
+    # command: server --console-address ":9001" /data
+
+
 
 
 networks:
