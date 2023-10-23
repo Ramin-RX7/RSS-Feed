@@ -1,6 +1,7 @@
 # Custom
 .vscode/
 personal/
+staticfiles/
 
 
 # Byte-compiled / optimized / DLL files
