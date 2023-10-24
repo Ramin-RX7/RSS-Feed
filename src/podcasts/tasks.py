@@ -75,27 +75,46 @@ class BasePodcastTask(Task):
 
 
 @shared_task(base=BasePodcastTask, bind=True)
-def update_podcast(self, podcast_id):
+def update_podcast(self, podcast_id, explicit_request=False):
     # self.request.retries
+    request_type = "explicit" if explicit_request else "scheduled"
+    logger.info({"event_type": "podcast_update",
+        "message" : f"{request_type} update request recieved",
+        "podcast_id" : podcast_id,
+        "args" : [],
+        "kwargs" : {},
+    })
     podcast = PodcastRSS.objects.get(id=podcast_id)
     new_episodes = podcast.update_episodes()
     if new_episodes:  #? Should I publish that a podcast updated with no new episodes?
         data = {
             "timestamp": get_nows(),
             "podcast_id": podcast_id,
-            "new_episodes": new_episodes
+            "new_episodes": list(map(lambda episode:episode.id, new_episodes))
         }
         rabbitmq.publish_podcast_update(data)
-    # logger.info(f'Successfully updated podcast: {podcast.name}')
+    return len(new_episodes)
 
 
 
 @shared_task
-def update_podcasts_episodes():
+def update_podcasts_episodes(explicit_request=False):
     # logger.info("Request to update podcasts episodes")
+    if explicit_request:
+        logger.info({"event_type": "podcast_update",
+            "message" : "explicit update request recieved (for all rss)",
+            "podcast_id" : 0,
+            "args" : [],
+            "kwargs" : {},
+        })
     podcasts = PodcastRSS.objects.all()
 
-    tasks = [update_podcast.s(podcast_id=podcast.id) for podcast in podcasts]
+    tasks = [
+        update_podcast.s(
+            podcast_id=podcast.id,
+            explicit_request=explicit_request
+        ) for podcast in podcasts
+    ]
     task_groups = divide_tasks(tasks, CELERY_MAX_CONCURRENCY)
 
     initial_chain = chain()
@@ -105,9 +124,6 @@ def update_podcasts_episodes():
     # result = initial_chain | process_parsing_results.s()
     initial_chain.apply_async()
 
-# @shared_task
-# def update_podcasts_episodes():
-    # podcasts = PodcastRSS.objects.all()
     # for podcast in podcasts:
         # update_podcast.delay(podcast.id)
 
