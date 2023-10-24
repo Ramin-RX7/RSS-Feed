@@ -25,60 +25,52 @@ def divide_tasks(tasks, n):
 
 
 
-class PodcastRequest(Request):
-    'A minimal custom request to log failures and hard time limits.'
-
-    def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
-        if type(exc_info.exception) != Retry:
-            error_name = type(exc_info.exception).__name__
-            message = str(exc_info.exception)
-            podcast_id = self.kwargs["podcast_id"]
-            logger.critical({"event_type": "podcast_update",
-                "message" : "Failed to update podcast",
-                "podcast_id" : podcast_id,
-                "error_name" : error_name,
-                "error_message" : message,
-                "args" : self.args,
-                "kwargs" : self.kwargs,
-            })
-        return super().on_failure(
-            exc_info,
-            send_failed_event=send_failed_event,
-            return_ok=return_ok
-        )
-    def on_retry(self, exc_info):
-        error_name = type(exc_info.exception.exc).__name__
-        message = str(exc_info.exception.exc)
-        podcast_id = self.kwargs["podcast_id"]
-        logger.error({"event_type": "podcast_update",
-            "message" : "Failed to update podcast, retrying...",
-            "podcast_id" : podcast_id,
-            "error_name" : error_name,
-            "error_message" : message,
-            "args" : self.args,
-            "kwargs" : self.kwargs,
-        })
-        return super().on_retry(exc_info)
-    def on_success(self, failed__retval__runtime, **kwargs):
-        # logger.info(kwargs)
-        logger.info({"event_type": "podcast_update",
-            "message" : "podcast updated",
-            "podcast_id" : self.kwargs["podcast_id"],
-            "args" : self.args,
-            "kwargs" : self.kwargs,
-        })
-        return super().on_success(failed__retval__runtime, **kwargs)
-
-
 class BasePodcastTask(Task):
-    Request = PodcastRequest
     autoretry_for = (Exception,)
     max_retries = CELERY_MAX_RETRY
     # retry_backoff_max = 32
     # default_retry_delay = 1
-    # retry_kwargs = {'max_retries': 5}   # READMORE
     retry_backoff = True  # 1
     retry_jitter = False
+    acks_late=True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        error_name = type(exc).__name__
+        message = str(exc)
+        logger.critical({"event_type": "podcast_update",
+            "message" : "Failed to update podcast",
+            "podcast_id" : kwargs["podcast_id"],
+            "error_name" : error_name,
+            "error_message" : message,
+            "args" : args,
+            "kwargs" : kwargs,
+        })
+        return super().on_failure(
+            exc, task_id, args, kwargs, einfo
+        )
+
+    def on_success(self, retval, task_id, args, kwargs):
+        logger.info({"event_type": "podcast_update",
+            "message" : "podcast updated",
+            "podcast_id" : kwargs["podcast_id"],
+            "args" : args,
+            "kwargs" : kwargs,
+        })
+        return super().on_success(retval, task_id, args, kwargs)
+
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
+        error_name = type(exc).__name__
+        message = str(exc)
+        logger.error({"event_type": "podcast_update",
+            "message" : "Failed to update podcast, retrying...",
+            "podcast_id" : kwargs["podcast_id"],
+            "error_name" : error_name,
+            "error_message" : message,
+            "args" : args,
+            "kwargs" : kwargs,
+        })
+        return super().on_retry(exc, task_id, args, kwargs, einfo)
+
 
 
 
