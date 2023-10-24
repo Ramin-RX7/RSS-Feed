@@ -31,16 +31,23 @@ logger = logging.getLogger("elastic")
 def track_user(data):
     """Save the latest login info of user in db"""
     user_id = data["user_id"]
-
-    user_track, updated = UserTracking.objects.update_or_create(user_id=user_id, defaults={
-        "last_login" : datetime.fromtimestamp(data["timestamp"]),
+    body = {
+        "last_login" : data["timestamp"],
         "login_type" : data["action"],
         "user_agent" : data["user_agent"],
         "ip" : data["ip"],
-    })
-    if user_track.login_type == "login":
-        user_track.last_userlogin = user_track.last_login
-        user_track.save()
+    }
+    user_track = UserTracking.objects.filter(user_id=user_id)
+    if user_track.exists():
+        if body["login_type"] == "login":
+            body.update({"last_userlogin":body["last_login"]})
+        user_track.update(**body)
+    else:
+        body.update({"last_userlogin":body["last_login"]})
+        user_track = UserTracking.objects.create(
+            user_id=user_id,
+            **body
+        )
 
     logger.info({
         "event_type": "auth",
@@ -85,7 +92,7 @@ def auth_callback(ch, method, properties, body):
     # consumer received auth queue callback
     data = json.loads(body)
     track_user(data)
-    # auth_notification(data)
+    auth_notification(data)
 
 
 
