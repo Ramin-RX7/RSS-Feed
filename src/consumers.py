@@ -114,12 +114,12 @@ def podcast_update_notification(body):
 
     try:
         with transaction.atomic():
-            notification = Notification.objects.create(name="Podcast_Update", data=body)
+            notification = Notification.objects.create(name="podcast_update", data=body)
             UserNotification.objects.bulk_create(user_notifications)
     except: # BUG: what exception?
         logger.error({
             "event_type":"notification",
-            "name": "auth",
+            "name": "podcast_update",
             "notif_body": body,
             "user": users,
             "message": "did not create podcast update notification",
@@ -127,8 +127,8 @@ def podcast_update_notification(body):
     else:
         logger.info({
             "event_type":"notification",
-            "name":"auth",
-            "notif_data": notification.data,
+            "name":"podcast_update",
+            "notif_data": body,
             "user": users,
             "message": "podcast update notification created",
         })
