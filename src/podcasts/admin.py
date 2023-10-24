@@ -55,7 +55,7 @@ class PodcastRSSAdmin(admin.ModelAdmin):
     @admin.action(description="Update selected podcasts")
     def update_rss_action(self, request, queryset):
         for rss in queryset:
-            update_podcast.delay(podcast_id=rss.id)
+            update_podcast.delay(podcast_id=rss.id, explicit_request=True)
         self.message_user(
             request,
             'Update request for selected podcast has been sent',
