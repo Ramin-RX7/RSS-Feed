@@ -49,3 +49,6 @@ class UserTracking(BaseModel):
     user_agent = models.TextField()
     ip = models.CharField(max_length=75)
     # last_seen = models.DateTimeField()
+
+    def __str__(self) -> str:
+        return f"{self.user_id} ({self.login_types})"
