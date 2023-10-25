@@ -7,9 +7,11 @@ from ..models import User
 class LoginAuthBackend(ModelBackend):
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        user = User.objects.get(username=username)
-        if user.check_password(password) and user.is_active:
-            return user
+        user_qs = User.objects.filter(username=username)
+        if user_qs.exists():
+            user = user_qs.get()
+            if user.check_password(password) and user.is_active:
+                return user
         return None
 
     def get_user(self, user_id):
