@@ -15,14 +15,13 @@ def get_rss_content(rss_object) -> dict:
 
 def get_rss_main_content(rss_object):
     full_content = get_rss_content(rss_object)
-    # if full_content.get("item"):
     full_content.pop("item")
     return full_content
 
 
 def get_rss_episodes(rss_object):
     full_content = get_rss_content(rss_object)
-    return full_content.get("item")
+    return full_content.get("item")[::-1]
 
 
 def get_unparsed_episodes(rss_object, episodes_model):
@@ -31,6 +30,6 @@ def get_unparsed_episodes(rss_object, episodes_model):
     live_episodes_count = len(live_episodes)
     diff = live_episodes_count - db_episodes_count
     if diff > 0:
-        return (live_episodes[:diff])[::-1]
+        return live_episodes[-diff:]
     else:
         return []

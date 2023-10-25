@@ -19,7 +19,7 @@ services:
 
   app:
     build: .
-    command: sh -c "python manage.py compilemessages --ignore=env && python manage.py migrate && python manage.py collectstatic --no-input && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    command: sh -c "python manage.py compilemessages --ignore=env && python manage.py migrate && python manage.py collectstatic --no-input && gunicorn config.wsgi:application --reload --bind 0.0.0.0:8000"
     container_name: djangorss
     environment:
       - PYTHONUNBUFFERED=1
@@ -28,6 +28,7 @@ services:
     depends_on:
       - postgres
       - rabbit
+      - esearch
     # ports:
     #   - 8000:8000
     expose:
@@ -58,6 +59,7 @@ services:
     networks:
       - main
     depends_on:
+      - esearch
       - postgres
       - redis
       - app

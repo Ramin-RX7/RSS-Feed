@@ -31,11 +31,10 @@ class EpisodeRSSFilter(admin.SimpleListFilter):
 
 
 @admin.register(models.PodcastEpisode)
-class PodcastRSSAdmin(admin.ModelAdmin):
+class EpisodeAdmin(admin.ModelAdmin):
     search_fields = ["id"]
     list_per_page = 30
     list_filter = [EpisodeRSSFilter,]
-    actions = ["update_rss_action", ]
     search_fields = ["title"]
 
 
@@ -49,18 +48,8 @@ class PodcastRSSAdmin(admin.ModelAdmin):
     autocomplete_fields = ["main_fields_path", "episode_attributes_path"]
     fields = ["name", "url", "main_fields_path", "episode_attributes_path"]
     readonly_fields = ('view_episodes',)
-    actions = ["update_rss_action",]
+    actions = ["update_rss_action","repair"]
     search_fields = ["name", "main_fields__title"]
-
-    @admin.action(description="Update selected podcasts")
-    def update_rss_action(self, request, queryset):
-        for rss in queryset:
-            update_podcast.delay(podcast_id=rss.id)
-        self.message_user(
-            request,
-            'Update request for selected podcast has been sent',
-            level=messages.SUCCESS
-        )
 
     def link(self, obj):
         link = f'<a href="{obj.url}" target="_blank">View RSS</a>'
@@ -71,3 +60,22 @@ class PodcastRSSAdmin(admin.ModelAdmin):
         link = f'<a href="{url}?rss__id__exact={obj.pk}">View Episodes</a>'
         return format_html(link)
     view_episodes.short_description = 'Episodes'
+
+
+    @admin.action(description="Update selected podcasts")
+    def update_rss_action(self, request, queryset):
+        for rss in queryset:
+            update_podcast.delay(podcast_id=rss.id, explicit_request=True)
+        self.message_user(
+            request,
+            'Update request for selected podcast has been sent',
+            level=messages.SUCCESS
+        )
+
+    @admin.action(description="repair the rss object")
+    def repair(self, request, queryset):
+        for rss in queryset:
+            rss.repair_database()
+
+
+

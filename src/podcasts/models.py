@@ -53,13 +53,13 @@ class PodcastMainFields(models.Model):
 
     category = models.CharField(max_length=75, null=True, blank=True)
     summary = models.TextField(blank=True, null=True)
-    image = models.CharField(max_length=300, null=True)      # URLField
-    host = models.CharField(max_length=50, null=True)
+    image = models.CharField(max_length=300, null=True, blank=True)      # URLField
+    host = models.CharField(max_length=50, null=True, blank=True)
     keywords = models.TextField(null=True, blank=True)
-    explicit = models.CharField(max_length=100, null=True)   # Boolean field
-    copyright = models.CharField(max_length=100, null=True)
-    language = models.CharField(max_length=25, null=True)
-    link = models.URLField(null=True)
+    explicit = models.CharField(max_length=100, null=True, blank=True)   # Boolean field
+    copyright = models.CharField(max_length=100, null=True, blank=True)
+    language = models.CharField(max_length=25, null=True, blank=True)
+    link = models.URLField(null=True, blank=True)
 
 
 
@@ -81,15 +81,22 @@ class PodcastRSS(BaseModel):
 
     def save(self, **kwargs):
         if not self.pk:
-            with transaction.atomic():
-                rss_parser = RSSXMLParser(self, PodcastMainFields)
-                rss_parser.fill_rss()
-                saved = super().save()
-                episode_parser = EpisodeXMLParser(self, PodcastEpisode)
-                episode_parser.create_all_episodes()
-                return saved
+            return self.save_from_scratch()
             # raise SystemError()
         return super().save()
+
+    def save_from_scratch(self):
+        with transaction.atomic():
+            rss_parser = RSSXMLParser(self, PodcastMainFields)
+            rss_parser.fill_rss()
+            saved = super().save()
+            episode_parser = EpisodeXMLParser(self, PodcastEpisode)
+            episode_parser.create_all_episodes()
+            return saved
+
+    def repair_database(self):
+        PodcastEpisode.objects.filter(rss=self).delete()
+        self.save_from_scratch()
 
     def __str__(self):
         return f"{self.name} ({self.main_fields.title})"
@@ -108,7 +115,7 @@ class PodcastEpisode(BaseModel):
     summary = models.TextField(null=True,blank=True)
     description = models.TextField(null=True,blank=True)
     keywords = models.CharField(max_length=150, null=True, blank=True)
-    image = models.CharField(max_length=300, null=True)      # URLField
+    image = models.CharField(max_length=300, null=True, blank=True)      # URLField
     # guests = models.CharField(max_length=100, null=True, blank=True)
     # guid
     def __str__(self) -> str:

@@ -68,7 +68,7 @@ class JWTAuthBackend(BaseAuthentication):
         username = self._get_username(payload)
         user = User.objects.get(username=username)
         if not user.is_active:
-            raise exceptions.PermissionDenied(-('User is inactive'))
+            raise exceptions.PermissionDenied(_('User is inactive'))
         return user
 
     def _validate_cache_data(self, user, jti, agent):
