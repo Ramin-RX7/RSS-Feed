@@ -28,6 +28,7 @@ services:
     depends_on:
       - postgres
       - rabbit
+      - esearch
     # ports:
     #   - 8000:8000
     expose:
@@ -58,6 +59,7 @@ services:
     networks:
       - main
     depends_on:
+      - esearch
       - postgres
       - redis
       - app
