@@ -42,6 +42,7 @@ Users can see the podcast (RSS) details, items and can also have some social int
 This project uses elastic search to save the logs of most events happening on the server. Every api call, authentication actions by user, podcast update actions will be stored in elastic search database. The logs follow acceptable logging practices to have an easy to use logging mechanism (specially through Kibana).
 
 Also Since `nginx`, `gunicorn` and `minio` are used, the project is complete to be deployed on any server.
+> Even though everything is implemented, you may need to consider separating different consumers defined in `src/consumers.py` into multiple docker-compose services to have better performance)
 
 
 
