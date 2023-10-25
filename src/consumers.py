@@ -1,8 +1,6 @@
 import os
-import time
 import json
 import logging
-from datetime import datetime
 from multiprocessing import Process
 
 import pika
@@ -21,7 +19,7 @@ from core.utils import get_nows
 from accounts.models import UserTracking,User
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
-
+from podcasts.notification import PodcastUpdateNotificaiton
 
 logger = logging.getLogger("elastic")
 
@@ -104,32 +102,37 @@ def podcast_update_notification(body):
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
     user_notifications = []
+    users_ids = []
     users = []
+
+    notification = Notification(name="podcast_update", data=json.dumps({**data,"subject": "podcast Updated"}))
     for subscription in Subscribe.objects.filter(rss=podcast,notification=True).prefetch_related("user"):
         user_notifications.append(UserNotification(
             user = subscription.user,
             notification = notification
         ))
-        users.append(subscription.user.id)
+        users.append(subscription.user)
+        users_ids.append(subscription.user.id)
 
     try:
         with transaction.atomic():
-            notification = Notification.objects.create(name="podcast_update", data=body)
+            notification.save()
             UserNotification.objects.bulk_create(user_notifications)
-    except: # BUG: what exception?
+            PodcastUpdateNotificaiton(notification, users).send_bulk()
+    except Exception as e: # BUG: what exception?
         logger.error({
             "event_type":"notification",
             "name": "podcast_update",
-            "notif_body": body,
-            "user": users,
+            "notif_body": str(data),
+            "user": users_ids,
             "message": "did not create podcast update notification",
         })
     else:
         logger.info({
             "event_type":"notification",
             "name":"podcast_update",
-            "notif_data": body,
-            "user": users,
+            "notif_data": str(data),
+            "user": users_ids,
             "message": "podcast update notification created",
         })
 
