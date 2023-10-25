@@ -20,6 +20,7 @@
   - [Build With](#build-with)
   - [Table of Contents](#table-of-contents)
   - [About the Project](#about-the-project)
+    - [What does it do?](#what-does-it-do)
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
     - [Setup and Deploy steps](#setup-and-deploy-steps)
@@ -30,6 +31,17 @@
 
 ## About the Project
 This project is a web application built with `Django Rest Framework` for content aggregation from RSS Feeds. This README file will guide you through the setup process, provide instructions for running the project, and explain how to contribute to its development.
+
+### What does it do?
+This project is designed to parse different types of RSS feeds and save them in the database (postgresql by default). (Although this exact project is desinged based on podcast rss feeds but the code is highly extendable and can be easily converted to a project for another category of feeds. Also the parser itself does not need any changes since it automatically fills the database.)
+
+This project also uses jwt as the main authentication for users. Users must login with their username/password and will be given access/refresh token to be used as the login method after that. Their tokens will be saved in cache (default to Redis) and in each request needing authentication the tokens will be checked.
+
+Users can see the podcast (RSS) details, items and can also have some social interactions such as liking items, subscribing to feeds, and commenting on items. They can set notification for updates of their favorite feeds so they'll get a notification (default to Email) to be notified on updates.
+
+This project uses elastic search to save the logs of most events happening on the server. Every api call, authentication actions by user, podcast update actions will be stored in elastic search database. The logs follow acceptable logging practices to have an easy to use logging mechanism (specially through Kibana).
+
+Also Since `nginx`, `gunicorn` and `minio` are used, the project is complete to be deployed on any server.
 
 
 
