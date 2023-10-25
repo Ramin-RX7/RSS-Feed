@@ -53,6 +53,13 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
         self.is_active = False
         self.save()
 
+    @property
+    def active_sessions(self):
+        sessions = {}
+        for session in auth_cache.keys(f"{self.id}|*"):
+            jti = session.split("|")[1]
+            sessions[jti] = auth_cache.get(session)
+        return sessions
 
 
 _login_types = models.TextChoices("login_type","login refresh access other register")
