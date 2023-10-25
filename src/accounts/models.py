@@ -48,6 +48,11 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
             return True
         return False
 
+    def block(self):
+        auth_cache.delete_pattern(f"{self.id}|*")
+        self.is_active = False
+        self.save()
+
 
 
 _login_types = models.TextChoices("login_type","login refresh access other register")
