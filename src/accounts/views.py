@@ -219,7 +219,7 @@ class LogoutView(APIView):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
-            auth_cache.delete(f"{user.id}|{jti}")
+            user.logout(jti)
 
             data = {
                 "user_id": user.id,
@@ -385,25 +385,23 @@ class ActiveSessionsView(viewsets.ViewSet):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        sessions = {}
-        for session in auth_cache.keys(f"{user.id}|*"):
-            jti = session.split("|")[1]
-            sessions[jti] = auth_cache.get(session)
-        return Response(sessions)
+        return Response(user.active_sessions)
 
     def logout(self, request, session_code, *args, **kwargs):
-        auth_cache.delete(f"{request.user.id}|{session_code}")
+        request.user.logout(session_code)
         return Response({}, status.HTTP_202_ACCEPTED)
 
     def logout_others(self, request, *args, **kwargs):
         current_jti = request.auth.get("jti")
-        print(current_jti)
-        for session in auth_cache.keys(f"{request.user.id}|*"):
-            if session == f"{request.user.id}|{current_jti}":
+        user = request.user
+        for session in auth_cache.keys(f"{user.id}|*"):
+            if session == f"{user.id}|{current_jti}":
                 continue
             auth_cache.delete(session)
         return Response({}, status.HTTP_202_ACCEPTED)
+
     def logout_all(self, request, *args, **kwargs):
-        for session in auth_cache.keys(f"{request.user.id}|*"):
-            auth_cache.delete(session)
+        user = request.user
+        for session in user.active_sessions.keys():
+            user.logout(session)
         return Response({}, status.HTTP_202_ACCEPTED)
