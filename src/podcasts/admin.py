@@ -31,11 +31,10 @@ class EpisodeRSSFilter(admin.SimpleListFilter):
 
 
 @admin.register(models.PodcastEpisode)
-class PodcastRSSAdmin(admin.ModelAdmin):
+class EpisodeAdmin(admin.ModelAdmin):
     search_fields = ["id"]
     list_per_page = 30
     list_filter = [EpisodeRSSFilter,]
-    actions = ["update_rss_action", ]
     search_fields = ["title"]
 
 
