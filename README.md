@@ -122,4 +122,4 @@ Finally create a pull request and mention all the changes of your branch.
 
 
 ## Licence
-`RSS-Feed` is maintained under MIT license (read more [here](/LICENSE))
+`RSS-Feed` is maintained under `GNU General Public License v3.0` license (read more [here](/LICENSE))
