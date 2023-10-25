@@ -188,7 +188,7 @@ class RefreshTokenView(APIView):
             "ip": _get_remote_addr(request.headers),
         }
         logger.info({
-            **data,
+            **elastic_data,
             "event_type":"auth",
         })
         RabbitMQ.publish_s("auth", elastic_data)
@@ -357,8 +357,10 @@ class ProfileView(viewsets.ViewSet, RetrieveUpdateAPIView):
 
     @action(detail=False)
     def subscriptions(self, request, *args, **kwargs):
+        print(self.get_object())
         query_results = Subscribe.objects.filter(user=self.get_object()).values(
             "rss__id", "notification").prefetch_related("rss")
+        print(query_results, flush=True)
         result_list = [{"id": item["rss__id"], "notification": item["notification"]} for item in query_results]
         return Response(
             result_list,
