@@ -8,8 +8,10 @@ services:
       - /src/.env
     networks:
       - main
-    ports:
-      - 5432:5432
+    # ports:
+    #   - 5432:5432
+    expose:
+      - 5432
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -17,7 +19,7 @@ services:
 
   app:
     build: .
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py compilemessages --ignore=env && python manage.py migrate && python manage.py collectstatic --no-input && gunicorn config.wsgi:application --reload --bind 0.0.0.0:8000"
     container_name: djangorss
     environment:
       - PYTHONUNBUFFERED=1
@@ -26,8 +28,11 @@ services:
     depends_on:
       - postgres
       - rabbit
-    ports:
-      - 8000:8000
+      - esearch
+    # ports:
+    #   - 8000:8000
+    expose:
+      - 8000
     networks:
       - main
     restart: always
@@ -54,6 +59,7 @@ services:
     networks:
       - main
     depends_on:
+      - esearch
       - postgres
       - redis
       - app
@@ -76,9 +82,12 @@ services:
     restart: always
     networks:
       - main
-    ports:
-      - 5672:5672
-      - 15672:15672
+    # ports:
+    #   - 5672:5672
+    #   - 15672:15672
+    expose:
+      - 5672
+      - 15672
     env_file:
       - /src/.env
     # healthcheck:
@@ -102,9 +111,12 @@ services:
   esearch:
     mem_limit: 512m
     image: elasticsearch:7.14.2
-    ports:
-      - 9200:9200
-      - 9300:9300
+    # ports:
+    #   - 9200:9200
+    #   - 9300:9300
+    expose:
+      - 9200
+      - 9300
     networks:
       - main
     environment:
@@ -149,6 +161,47 @@ services:
       # - ./kibana.yml:/usr/share/kibana/config/kibana.yml
     environment:
       ELASTICSEARCH_HOSTS: "http://esearch:9200"
+
+
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./docker/nginx/
+      dockerfile: ./Dockerfile
+    depends_on:
+      - app
+    ports:
+      - 80:80
+    networks:
+      - main
+    restart: always
+    # volumes:
+    #   -
+
+
+
+  minio:
+    container_name: minio
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    #   - 9001:9001
+    # expose:
+    #   - 9000
+    #   - 9001
+    volumes:
+      - /static
+    command: server /data
+    networks:
+      - main
+    restart: always
+    env_file:
+      - /src/.env
+    # volumes:
+    #   - ./minio/data:/data
+    # command: server --console-address ":9001" /data
+
 
 
 

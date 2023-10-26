@@ -10,6 +10,8 @@ INSTALLED_APPS = [
     "debug_toolbar",
     'drf_spectacular',
     'django_celery_beat',
+    'rosetta',
+    'minio_storage',
 
     "core",
     "accounts",

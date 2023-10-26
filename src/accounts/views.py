@@ -1,17 +1,19 @@
-import time
 import uuid
 import logging
 
 from django.core.cache import caches
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView,RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from core import rabbitmq
+from core.rabbitmq import RabbitMQ
 from core.utils import get_nows
+from podcasts.utils import get_user_recommendations
+from interactions.models import Subscribe,Like
 from .serializers import (
     UserRegisterSerializer  ,  UserLoginSerializer,
     ChangePasswordSerializer,  ResetPasswordSerializer,
@@ -20,6 +22,9 @@ from .auth_backends import LoginAuthBackend, JWTAuthBackend
 from .auth_backends.jwt.utils import generate_tokens,decode_jwt,_save_cache,_get_user_agent,_get_remote_addr
 from .models import User
 from .tasks import send_reset_password_email
+from .permissions import IsOwner
+
+
 
 
 auth_cache = caches["auth"]
@@ -71,7 +76,7 @@ class UserRegisterView(CreateAPIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            RabbitMQ.publish_s("auth", data)
         return response
 
 
@@ -110,7 +115,7 @@ class UserLoginView(APIView):
 
         user = LoginAuthBackend().authenticate(request, username=username, password=password)
         if user is None:  #? should we save invalid login attempts?
-            return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': _('Invalid Credentials')}, status=status.HTTP_400_BAD_REQUEST)
 
         jti,access_token,refresh_token = generate_tokens(username)
 
@@ -128,7 +133,7 @@ class UserLoginView(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", data)
+        RabbitMQ.publish_s("auth", data)
 
         data = {
             "access": access_token,
@@ -163,7 +168,7 @@ class RefreshTokenView(APIView):
         except:
             pass
         else:
-            return Response({"message":"already authenticated"})
+            return Response({"message":_("already authenticated")})
 
         # refresh_token = request.data.get('refresh_token')
         auth = JWTAuthBackend()
@@ -183,10 +188,10 @@ class RefreshTokenView(APIView):
             "ip": _get_remote_addr(request.headers),
         }
         logger.info({
-            **data,
+            **elastic_data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", elastic_data)
+        RabbitMQ.publish_s("auth", elastic_data)
 
         data = {
             "access": access_token,
@@ -210,11 +215,11 @@ class LogoutView(APIView):
     authentication_classes = (JWTAuthBackend,)
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    def get(self, request):
         try:
             jti = request.auth.get("jti")
             user = User.objects.get(username=request.auth.get("username"))
-            auth_cache.delete(f"{user.id}|{jti}")
+            user.logout(jti)
 
             data = {
                 "user_id": user.id,
@@ -228,11 +233,11 @@ class LogoutView(APIView):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
+            RabbitMQ.publish_s("auth", data)
 
             return Response({}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response({"message": f"{type(e)}: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": _(f"{type(e)}: {e}")}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -252,12 +257,12 @@ class ChangePassword(APIView):
 
         if not user.check_password(data["old_password"]):
             return Response(
-                {"detail": "invalid password"},
+                {"detail": _("invalid password")},
                 status=status.HTTP_406_NOT_ACCEPTABLE
             )
         if user.check_password(data["new_password"]):
             return Response(
-                {"detail": "new password can not be same as old password"},
+                {"detail": _("new password can not be same as old password")},
                 status=status.HTTP_406_NOT_ACCEPTABLE
             )
 
@@ -276,10 +281,10 @@ class ChangePassword(APIView):
             **data,
             "event_type":"auth",
         })
-        rabbitmq.publish("auth", "...", data)
+        RabbitMQ.publish_s("auth", data)
 
         return Response(
-                {"detail": "password changed successfully"},
+                {"detail": _("password changed successfully")},
                 status=status.HTTP_202_ACCEPTED
             )
 
@@ -312,15 +317,15 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
-            return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+            RabbitMQ.publish_s("auth", data)
+            return Response({}, status=status.HTTP_202_ACCEPTED)
         return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
     @action(detail=True, methods=["POST"])
     def reset_password_request(self, request):
         email = request.POST.get("email")
         if not email:
-            return Response({"detail":"email field not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":_("email field not provided")}, status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter(email=email)
         if user.exists():
             user = user.get()
@@ -339,5 +344,64 @@ class ResetPassword(viewsets.ViewSet):
                 **data,
                 "event_type":"auth",
             })
-            rabbitmq.publish("auth", "...", data)
-        return Response({"send":"ok"}, status=status.HTTP_200_OK)
+            RabbitMQ.publish_s("auth", data)
+        return Response({"send":_("ok")}, status=status.HTTP_200_OK)
+
+
+
+class ProfileView(viewsets.ViewSet, RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    lookup_field = 'username'
+    lookup_url_kwarg = 'username'
+    serializer_class = UserRegisterSerializer
+
+    @action(detail=False)
+    def subscriptions(self, request, *args, **kwargs):
+        print(self.get_object())
+        query_results = Subscribe.objects.filter(user=self.get_object()).values(
+            "rss__id", "notification").prefetch_related("rss")
+        print(query_results, flush=True)
+        result_list = [{"id": item["rss__id"], "notification": item["notification"]} for item in query_results]
+        return Response(
+            result_list,
+            status.HTTP_200_OK
+        )
+
+    @action(detail=False)
+    def likes(self, request, *args, **kwargs):
+        qs = Like.objects.filter(user=self.get_object()).values_list("episode", flat=True)
+        return Response(qs, status.HTTP_200_OK)
+
+    @action(detail=False)
+    def recommendations(self, request, *args, **kwargs):
+        user = self.get_object()
+        return Response(get_user_recommendations(user), status.HTTP_200_OK)
+
+
+
+class ActiveSessionsView(viewsets.ViewSet):
+    authentication_classes = (JWTAuthBackend,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        return Response(user.active_sessions)
+
+    def logout(self, request, session_code, *args, **kwargs):
+        request.user.logout(session_code)
+        return Response({}, status.HTTP_202_ACCEPTED)
+
+    def logout_others(self, request, *args, **kwargs):
+        current_jti = request.auth.get("jti")
+        user = request.user
+        for session in auth_cache.keys(f"{user.id}|*"):
+            if session == f"{user.id}|{current_jti}":
+                continue
+            auth_cache.delete(session)
+        return Response({}, status.HTTP_202_ACCEPTED)
+
+    def logout_all(self, request, *args, **kwargs):
+        user = request.user
+        for session in user.active_sessions.keys():
+            user.logout(session)
+        return Response({}, status.HTTP_202_ACCEPTED)

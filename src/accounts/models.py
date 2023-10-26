@@ -1,11 +1,16 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin
+from django.core.cache import caches
 from django.core.mail import send_mail
 from django.core.validators import MinLengthValidator,MaxLengthValidator
+from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin
 
 from core.models import BaseModel
 from .validators import username_validator
 from .managers import UserManager
+
+
+
+auth_cache = caches["auth"]
 
 
 
@@ -33,15 +38,32 @@ class User(AbstractBaseUser,PermissionsMixin,BaseModel):
     def __str__(self):
         return self.username
 
-
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
+    def logout(self, jti:str) -> bool:
+        if auth_cache.get(f"{self.id}|{jti}"):
+            auth_cache.delete(f"{self.id}|{jti}")
+            return True
+        return False
+
+    def block(self):
+        auth_cache.delete_pattern(f"{self.id}|*")
+        self.is_active = False
+        self.save()
+
+    @property
+    def active_sessions(self):
+        sessions = {}
+        for session in auth_cache.keys(f"{self.id}|*"):
+            jti = session.split("|")[1]
+            sessions[jti] = auth_cache.get(session)
+        return sessions
 
 
 _login_types = models.TextChoices("login_type","login refresh access other register")
-class UserTracking(models.Model):
+class UserTracking(BaseModel):
     user_id = models.IntegerField(editable=False,primary_key=True)
     last_login = models.DateTimeField()
     last_userlogin = models.DateTimeField()
@@ -49,3 +71,6 @@ class UserTracking(models.Model):
     user_agent = models.TextField()
     ip = models.CharField(max_length=75)
     # last_seen = models.DateTimeField()
+
+    def __str__(self) -> str:
+        return f"{self.user_id} ({self.login_types})"

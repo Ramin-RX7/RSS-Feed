@@ -1,8 +1,6 @@
 import os
-import time
 import json
 import logging
-from datetime import datetime
 from multiprocessing import Process
 
 import pika
@@ -21,7 +19,7 @@ from core.utils import get_nows
 from accounts.models import UserTracking,User
 from podcasts.models import PodcastRSS
 from interactions.models import Notification,Subscribe,UserNotification
-
+from podcasts.notification import PodcastUpdateNotificaiton
 
 logger = logging.getLogger("elastic")
 
@@ -31,16 +29,23 @@ logger = logging.getLogger("elastic")
 def track_user(data):
     """Save the latest login info of user in db"""
     user_id = data["user_id"]
-
-    user_track, updated = UserTracking.objects.update_or_create(user_id=user_id, defaults={
-        "last_login" : datetime.fromtimestamp(data["timestamp"]),
+    body = {
+        "last_login" : data["timestamp"],
         "login_type" : data["action"],
         "user_agent" : data["user_agent"],
         "ip" : data["ip"],
-    })
-    if user_track.login_type == "login":
-        user_track.last_userlogin = user_track.last_login
-    user_track.save()
+    }
+    user_track = UserTracking.objects.filter(user_id=user_id)
+    if user_track.exists():
+        if body["login_type"] == "login":
+            body.update({"last_userlogin":body["last_login"]})
+        user_track.update(**body)
+    else:
+        body.update({"last_userlogin":body["last_login"]})
+        user_track = UserTracking.objects.create(
+            user_id=user_id,
+            **body
+        )
 
     logger.info({
         "event_type": "auth",
@@ -85,7 +90,7 @@ def auth_callback(ch, method, properties, body):
     # consumer received auth queue callback
     data = json.loads(body)
     track_user(data)
-    # auth_notification(data)
+    auth_notification(data)
 
 
 
@@ -97,32 +102,37 @@ def podcast_update_notification(body):
     podcast = PodcastRSS.objects.get(id=podcast_id)
 
     user_notifications = []
+    users_ids = []
     users = []
+
+    notification = Notification(name="podcast_update", data=json.dumps({**data,"subject": "podcast Updated"}))
     for subscription in Subscribe.objects.filter(rss=podcast,notification=True).prefetch_related("user"):
         user_notifications.append(UserNotification(
             user = subscription.user,
             notification = notification
         ))
-        users.append(subscription.user.id)
+        users.append(subscription.user)
+        users_ids.append(subscription.user.id)
 
     try:
         with transaction.atomic():
-            notification = Notification.objects.create(name="Podcast_Update", data=body)
+            notification.save()
             UserNotification.objects.bulk_create(user_notifications)
-    except: # BUG: what exception?
+            PodcastUpdateNotificaiton(notification, users).send_bulk()
+    except Exception as e: # BUG: what exception?
         logger.error({
             "event_type":"notification",
-            "name": "auth",
-            "notif_body": body,
-            "user": users,
+            "name": "podcast_update",
+            "notif_body": str(data),
+            "user": users_ids,
             "message": "did not create podcast update notification",
         })
     else:
         logger.info({
             "event_type":"notification",
-            "name":"auth",
-            "notif_data": notification.data,
-            "user": users,
+            "name":"podcast_update",
+            "notif_data": str(data),
+            "user": users_ids,
             "message": "podcast update notification created",
         })
 

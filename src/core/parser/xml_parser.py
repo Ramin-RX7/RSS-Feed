@@ -4,10 +4,13 @@ from .utils import *
 from .tag_parsers import *
 
 
+
+
 TAG_PARSERS = {
     "duration": parse_time,
     "publish_date": parse_pubdate,
 }
+
 
 
 
@@ -19,7 +22,7 @@ class RSSXMLParser:
 
     @classmethod
     def update_init(cls, rss_object):
-        return cls(rss_object, lambda x:rss_object.main_fields)
+        return cls(rss_object, lambda:rss_object.main_fields)
 
 
     def fill_rss(self):
@@ -31,6 +34,8 @@ class RSSXMLParser:
 
         for field in self.rss_path_object._meta.fields:
             field_name = field.name
+            if field_name == "route_name":
+                continue
 
             try:
                 if attr:=getattr(paths, field_name):
@@ -63,12 +68,13 @@ class EpisodeXMLParser:
         self.episode_paths = rss_object.episode_attributes_path
 
 
-    def create_new_episode(self, new_episode_item:dict):
-
+    def fill_new_episode(self, new_episode_item:dict):
         episode = self.episode_model(rss=self.rss_object)
 
         for field in self.episode_paths._meta.fields:
             field_name = field.name
+            if field_name == "route_name":
+                continue
             try:
                 if attr:=getattr(self.episode_paths, field_name):
                     route:list = attr.split(" ")
@@ -81,27 +87,30 @@ class EpisodeXMLParser:
                 obj = obj[route.pop(0)]
             if tag_parser:=TAG_PARSERS.get(field_name):
                 obj = tag_parser(obj)
-
             setattr(episode, field.name, obj)
         return episode
+
 
     def update_episodes(self):
         new_episodes = get_unparsed_episodes(self.rss_object, self.episode_model)
         if new_episodes:
             episodes = self.parse_multiple_episodes(new_episodes)
             self._create_episode_bulk(episodes)
-            return new_episodes
+            return episodes
         return []
+
 
     def _create_episode_bulk(self, episode_objects:list):
         self.episode_model.objects.bulk_create(episode_objects)
 
+
     def parse_multiple_episodes(self, episode_items:list[dict]) -> list:
         episode_objects = []
         for item in episode_items:
-            episode = self.create_new_episode(item)
+            episode = self.fill_new_episode(item)
             episode_objects.append(episode)
         return episode_objects
+
 
     def create_all_episodes(self):
         all_episode_items = get_rss_episodes(self.rss_object)
