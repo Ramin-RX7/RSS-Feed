@@ -20,6 +20,8 @@
   - [Build With](#build-with)
   - [Table of Contents](#table-of-contents)
   - [About the Project](#about-the-project)
+    - [What does it do?](#what-does-it-do)
+    - [Upcoming updates](#upcoming-updates)
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
     - [Setup and Deploy steps](#setup-and-deploy-steps)
@@ -31,6 +33,33 @@
 ## About the Project
 This project is a web application built with `Django Rest Framework` for content aggregation from RSS Feeds. This README file will guide you through the setup process, provide instructions for running the project, and explain how to contribute to its development.
 
+### What does it do?
+This project is designed to parse different types of RSS feeds and save them in the database (postgresql by default).
+
+> Although this project is desinged based on podcast rss feeds but the code is highly extendable and can be easily converted to a project for another category of feeds. Also the parser itself does not need any changes since it automatically fills the database.
+
+Different types of rss feeds can be easily added from django admin panel. All podcasts are automatically checked for updates (default to every 15 minutes) using celery-beat.
+
+This project also uses jwt as the main authentication for users. Users must login with their username/password and will be given access/refresh token to be used as the login method after that. Their tokens will be saved in cache (default to Redis) and in each request needing authentication, the tokens will be checked. Some actions that require jwt authentication are `like`, `subscribe`, `comment`. Users can also see their active sessions and logout from each one they want. In the case that user forgot their password they can reset it via email.
+
+Users can see the podcast (RSS) details, items and can also have some social interactions such as liking items, subscribing to feeds, and commenting on items. They can set notification for updates of their favorite feeds so they'll get a notification (default to Email) to be notified on updates.
+
+This project uses elastic search to save the logs of most events happening on the server. Every api call, authentication actions by user, podcast update actions will be stored in elastic search database. The logs follow acceptable logging practices to have an easy to use logging mechanism (specially through Kibana).
+
+Also Since `nginx`, `gunicorn` and `minio` are used, the project is complete to be deployed on any server.
+> Even though everything is implemented, you may need to consider separating different consumers defined in `src/consumers.py` into multiple docker-compose services to have better performance
+
+This project is intended to only be used as an API, it does not include a frontend server on it's own but can be easily connected to one by adding the server to docker-compose services (You may also want to nginx ports)
+
+
+
+### Upcoming updates
+- Playlists (listen later)
+- Complete notification handler
+- Faster rss adding using celery workers
+- Less usage of word `podcast` to make the code even more extendable.
+- Tests
+- API rate limit for users (if project is intended to be only an API, not a complete project with frontend server)
 
 
 ## Setup
@@ -93,4 +122,4 @@ Finally create a pull request and mention all the changes of your branch.
 
 
 ## Licence
-`RSS-Feed` is maintained under MIT license (read more [here](/LICENSE))
+`RSS-Feed` is maintained under `GNU General Public License v3.0` license (read more [here](/LICENSE))

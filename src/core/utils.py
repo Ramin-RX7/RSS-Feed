@@ -20,4 +20,4 @@ def get_now():
     return datetime.now(TZ_INFO)
 
 def get_nows():
-    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
