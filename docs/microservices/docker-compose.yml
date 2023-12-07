@@ -1,0 +1,103 @@
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodbvol:/data/db
+
+  auth:
+    container_name: auth
+    build:
+      context: "./RSS-MS-Authorization/"
+      dockerfile: ./Dockerfile
+    # command: sh -c "uvicorn main:app --host ${AUTHORIZATION_HOST} --port ${AUTHORIZATION_PORT} --reload"
+    command: python main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - RSS-MS-Authorization/src/.env
+    volumes:
+      - ./RSS-MS-Authorization/src/:/Authorization/
+    ports:
+      - 8001:8001
+    # restart: always
+
+  accounts:
+    container_name: accounts
+    build:
+      context: "./RSS-MS-Accounts/"
+      dockerfile: ./Dockerfile
+    command: python main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    # env_file:
+    #   - RSS-MS-Accounts/src/.env
+    volumes:
+      - ./RSS-MS-Accounts/src/:/Accounts/
+    ports:
+      - 8002:8002
+  #   restart: always
+
+
+  podcasts:
+    container_name: podcasts
+    build:
+      context: "./RSS-MS-Podcasts/"
+      dockerfile: ./Dockerfile
+    command: python main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    # env_file:
+    #   - RSS-MS-Podcasts/src/.env
+    volumes:
+      - ./RSS-MS-Podcasts/src/:/Podcasts/
+    ports:
+      - 8003:8003
+
+
+  # notification:
+  #   container_name: notification
+  #   build:
+  #     context: "./RSS-MS-Notification/"
+  #     dockerfile: ./Dockerfile
+  #   command: python main.py
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   env_file:
+  #     - RSS-MS-Notification/src/.env
+  #   volumes:
+  #     - ./RSS-MS-Podcasts/src/:/Podcasts/
+  #   # ports:
+  #   #   - 8003:8003
+  #   expose:
+  #     - 8004
+
+
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    restart: always
+
+
+  # celery:
+  #   container_name: celery
+  #   command: celery -A config.celery worker -l INFO
+  #   build:
+  #     context: "./RSS-MS-Notification/"
+  #     dockerfile: ./Dockerfile
+  #   volumes:
+  #     - ./RSS-MS-Notification/src/:/Notification/
+  #   environment:
+  #     - C_FORCE_ROOT=true
+
+
+volumes:
+  mongodbvol:
+  redis_data:
