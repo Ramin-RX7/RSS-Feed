@@ -1,6 +1,7 @@
 # RSS Feed Django Project
 `RSS-Feed` is Parser/API written in Django and compatible with multiple RSS feed schemas.
 
+
 ## Build With
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
@@ -15,12 +16,14 @@
 ![Minio](https://img.shields.io/badge/Minio-c72c48.svg?style=for-the-badge&logo=minio&logoColor=white)
 
 
+
 ## Table of Contents
 - [RSS Feed Django Project](#rss-feed-django-project)
   - [Build With](#build-with)
   - [Table of Contents](#table-of-contents)
   - [About the Project](#about-the-project)
     - [What does it do?](#what-does-it-do)
+    - [Related apps](#related-apps)
     - [Upcoming updates](#upcoming-updates)
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
@@ -31,6 +34,7 @@
 
 
 ## About the Project
+
 This project is a web application built with `Django Rest Framework` for content aggregation from RSS Feeds. This README file will guide you through the setup process, provide instructions for running the project, and explain how to contribute to its development.
 
 ### What does it do?
@@ -52,6 +56,20 @@ Also Since `nginx`, `gunicorn` and `minio` are used, the project is complete to 
 This project is intended to only be used as an API, it does not include a frontend server on it's own but can be easily connected to one by adding the server to docker-compose services (You may also want to nginx ports)
 
 
+### Related apps
+
+Althoug this project can be considered a complete project, I have also managed to make 3 microservices out of it that can interact with it.
+
+The idea in these microservices is that `RSS-Feed` be only used to save podcast details and their corressponding episodes and our microservices be in charge of other actions.
+
+So beside this project, we have:
+
+- [Authorization](https://github.com/Ramin-RX7/RSS-MS-Authorization) which is responsible for authentication and autherization of users.
+- [Accounts](https://github.com/Ramin-RX7/RSS-MS-Accounts) which is responsible for account of users and all interactions of users.
+- [Podcasts](https://github.com/Ramin-RX7/RSS-MS-Podcasts) which is responsible for providing external API for podcasts.
+
+> It worth mentioning that these microservices are written FastAPI and use MongoDB for database.
+
 
 ### Upcoming updates
 - Playlists (listen later)
@@ -60,6 +78,7 @@ This project is intended to only be used as an API, it does not include a fronte
 - Less usage of word `podcast` to make the code even more extendable.
 - Tests
 - API rate limit for users (if project is intended to be only an API, not a complete project with frontend server)
+
 
 
 ## Setup
@@ -97,6 +116,7 @@ docker compose -f "docker-compose.yml" up -d --build
 
 
 ## Contributing
+
 We welcome contributions to the `RSS-Feed` Django project.
 We use git-flow branching methods to contribute to `RSS-Feed`
 If you'd like to contribute, please follow these steps:
@@ -122,4 +142,5 @@ Finally create a pull request and mention all the changes of your branch.
 
 
 ## Licence
+
 `RSS-Feed` is maintained under `GNU General Public License v3.0` license (read more [here](/LICENSE))
