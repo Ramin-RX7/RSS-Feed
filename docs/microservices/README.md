@@ -7,7 +7,7 @@ This project also includes multiple microservices that can act as stand-alone ap
 - [Podcasts](https://github.com/Ramin-RX7/RSS-MS-Podcasts): Responsible for Podcast related actions
 
 
-All of these microservices include a dockerfile which makes them ready to deploy, however here, we have also maintained a [docker-compose file](https://github.com/Ramin-RX7/RSS-Feed/tree/develop/docs) to run all of them together. This docker-compose also contains `Redis` and `MongoDB` images.
+All of these microservices include a dockerfile which makes them ready to deploy, however here, we have also maintained a [docker-compose file](https://github.com/Ramin-RX7/RSS-Feed/tree/develop/docs/microservices/README.md) to run all of them together. This docker-compose also contains `Redis` and `MongoDB` images.
 
 
 In order to run all microservices through that `docker-compose.yml`:
