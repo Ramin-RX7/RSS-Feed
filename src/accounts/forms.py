@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserChangeForm,BaseUserCreationForm
+from django.contrib.auth.forms import BaseUserCreationForm
 
 from .models import User
 
@@ -10,22 +10,29 @@ class ChangeForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('username', "is_superuser", "email", 'first_name', 'last_name', 'is_staff', 'is_active','groups','user_permissions','password', )
+        fields = (
+            "username",
+            "is_superuser",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_active",
+            "groups",
+            "user_permissions",
+            "password",
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['first_name'].required = False
-        self.fields['last_name'].required = False
-
+        self.fields["first_name"].required = False
+        self.fields["last_name"].required = False
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        password = self.cleaned_data['password']
+        password = self.cleaned_data["password"]
         if password:
             user.set_password(password)
-        # elif not password and user.pk:
-        #     old_user = User.objects.get(pk=user.pk)
-        #     user.password = old_user.password
         if commit:
             user.save()
         return user
@@ -34,9 +41,17 @@ class ChangeForm(forms.ModelForm):
 class UserAddForm(BaseUserCreationForm):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'is_staff', 'is_active','groups','user_permissions')
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_active",
+            "groups",
+            "user_permissions",
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['first_name'].required = False
-        self.fields['last_name'].required = False
+        self.fields["first_name"].required = False
+        self.fields["last_name"].required = False
