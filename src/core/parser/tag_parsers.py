@@ -3,7 +3,11 @@ import time
 
 from email.utils import mktime_tz, parsedate_tz
 
-__all__ = ("parse_pubdate","parse_time",)
+
+__all__ = (
+    "parse_pubdate",
+    "parse_time",
+)
 
 
 
@@ -26,19 +30,19 @@ def parse_pubdate(text):
         try:
             pubtimeseconds = int(mktime_tz(parsed))
             return pubtimeseconds
-        except(OverflowError, ValueError):
+        except (OverflowError, ValueError):
             # print("epoch < t > 2038")
             return 0
 
     try:
-        parsed = time.strptime(text[:19], '%Y-%m-%dT%H:%M:%S')
+        parsed = time.strptime(text[:19], "%Y-%m-%dT%H:%M:%S")
         if parsed is not None:
-            m = re.match(r'^(?:Z|([+-])([0-9]{2})[:]([0-9]{2}))$', text[19:])
+            m = re.match(r"^(?:Z|([+-])([0-9]{2})[:]([0-9]{2}))$", text[19:])
             if m:
                 parsed = list(iter(parsed))
                 if m.group(1):
                     offset = 3600 * int(m.group(2)) + 60 * int(m.group(3))
-                    if m.group(1) == '-':
+                    if m.group(1) == "-":
                         offset = 0 - offset
                 else:
                     offset = 0
@@ -89,25 +93,25 @@ def parse_time(value):
     """
     value = value.strip()
 
-    if value == '':
+    if value == "":
         return 0
 
     hours = minutes = seconds = fraction = 0
     parsed = False
 
-    m = re.match(r'(\d+)[:](\d\d?)[:](\d\d?)([.]\d+)?$', value)
+    m = re.match(r"(\d+)[:](\d\d?)[:](\d\d?)([.]\d+)?$", value)
     if not parsed and m:
         hours, minutes, seconds, fraction = m.groups()
         fraction = float(fraction or 0.0)
         parsed = True
 
-    m = re.match(r'(\d+)[:](\d\d?)([.]\d+)?$', value)
+    m = re.match(r"(\d+)[:](\d\d?)([.]\d+)?$", value)
     if not parsed and m:
         minutes, seconds, fraction = m.groups()
         fraction = float(fraction or 0.0)
         parsed = True
 
-    m = re.match(r'(\d+)([.]\d+)?$', value)
+    m = re.match(r"(\d+)([.]\d+)?$", value)
     if not parsed and m:
         seconds, fraction = m.groups()
         fraction = float(fraction or 0.0)
@@ -120,4 +124,3 @@ def parse_time(value):
             return 0
 
     return (int(hours) * 60 + int(minutes)) * 60 + int(seconds)
-

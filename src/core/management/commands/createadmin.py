@@ -4,8 +4,9 @@ from accounts.models import User
 
 
 class Command(BaseCommand):
-    help = 'Create required configs/models before first run'
+    help = "Create required configs/models before first run"
 
     def handle(self, *args, **options):
-        # User.objects.delete()
-        user = User.objects.create_superuser(username="admin", email="admin@admin.admin", password="admin")
+        user = User.objects.create_superuser(
+            username="admin", email="admin@admin.admin", password="admin"
+        )
