@@ -1,4 +1,4 @@
-from django.core.mail import EmailMessage,send_mass_mail,send_mail
+from django.core.mail import EmailMessage, send_mass_mail, send_mail
 
 from config.settings import DEFAULT_FROM_EMAIL
 from accounts.models import User
@@ -10,16 +10,15 @@ class EmailNotification(BaseNotification):
     """
     Email Notfication (Base) class.
     """
+
     def send(self, user, **kwargs) -> dict:
         data = self.get_notification_data()
         email = EmailMessage(
-            subject = data["subject"],
-            body = self.get_message(user),
-            to = [user]
+            subject=data["subject"], body=self.get_message(user), to=[user]
         )
         email.send()
 
-    def get_message(self, user:User):
+    def get_message(self, user: User):
         return f"""
             Hey {user.username}!\n
             {self.get_notification_data()}
@@ -38,4 +37,4 @@ class EmailNotification(BaseNotification):
                 [user.email],
             ))
         count = send_mass_mail(emails)
-        #? check if count = len(users)
+        # XXX: check if count = len(users)
