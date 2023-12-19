@@ -4,7 +4,6 @@ from lib.notification.email import EmailNotification
 
 
 
-
 class PodcastUpdateNotificaiton(EmailNotification):
     def get_message(self, user: User):
         data = self.get_notification_data()
