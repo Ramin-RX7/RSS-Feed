@@ -31,7 +31,6 @@ def parse_pubdate(text):
             pubtimeseconds = int(mktime_tz(parsed))
             return pubtimeseconds
         except (OverflowError, ValueError):
-            # print("epoch < t > 2038")
             return 0
 
     try:
@@ -53,7 +52,6 @@ def parse_pubdate(text):
     except Exception:
         pass
 
-    # print('Cannot parse date: %s', repr(text))
     return 0
 
 

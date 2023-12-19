@@ -87,7 +87,6 @@ class PodcastDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
         rss = self.get_object()
         subscribe, created = Subscribe.objects.get_or_create(user=request.user, rss=rss)
         if created:
-            # serializer = SubscribeSerializer(subscribe)
             return Response({}, status=status.HTTP_201_CREATED)
         return Response(
             {"detail": _("already subscribed")}, status=status.HTTP_208_ALREADY_REPORTED
@@ -118,8 +117,7 @@ class PodcastDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
     def notify_on(self, request, pk):
         rss = self.get_object()
         subscribe, created = Subscribe.objects.get_or_create(user=request.user, rss=rss)
-        print(subscribe.notification)
-        if subscribe.notification == True:
+        if subscribe.notification:
             return Response(
                 {"detail": _("notification is already on for this podcast")},
                 status=status.HTTP_208_ALREADY_REPORTED,
@@ -231,7 +229,6 @@ class EpisodeDetailView(generics.RetrieveAPIView, viewsets.ViewSet):
         episode = self.get_object()
         like, created = Like.objects.get_or_create(user=request.user, episode=episode)
         if created:
-            # serializer = LikeSerializer(like)
             return Response({}, status=status.HTTP_201_CREATED)
         return Response(
             {"detail": _("already liked")}, status=status.HTTP_208_ALREADY_REPORTED

@@ -45,7 +45,7 @@ def encode_payload(payload):
     return jwt.encode(payload, SECRET_KEY, algorithm=ENCRYPTION)
 
 
-def decode_jwt(token):  # jwt.exceptions.DecodeError
+def decode_jwt(token):  # XXX: jwt.exceptions.DecodeError be handled here?
     return jwt.decode(token, SECRET_KEY, algorithms=[ENCRYPTION])
 
 

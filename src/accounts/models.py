@@ -30,7 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    EMAIL_FIELD = "email"  # READMORE
+    EMAIL_FIELD = "email"
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]
 
@@ -71,7 +71,7 @@ class UserTracking(BaseModel):
     )
     user_agent = models.TextField()
     ip = models.CharField(max_length=75)
-    # last_seen = models.DateTimeField()
+    # TODO: add last_seen field
 
     def __str__(self) -> str:
         return f"{self.user_id} ({self.login_types})"

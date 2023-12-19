@@ -16,7 +16,6 @@ class PodcastEpisodePaths(models.Model):
     description = models.CharField(max_length=100, null=True, blank=True)
     keywords = models.CharField(max_length=100, null=True, blank=True)
     image = models.CharField(max_length=100, null=True, blank=True)
-    # guests = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'"{self.route_name}" episode router'

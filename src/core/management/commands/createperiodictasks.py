@@ -16,7 +16,7 @@ class Command(BaseCommand):
         task = PeriodicTask.objects.create(
             interval=interval,
             name="Podcast_Episode_Updater",
-            task="podcasts.tasks.update_podcasts_episodes",  # Replace with your actual Celery task
+            task="podcasts.tasks.update_podcasts_episodes",
         )
         self.stdout.write(
             self.style.SUCCESS(

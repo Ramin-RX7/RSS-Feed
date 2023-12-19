@@ -86,7 +86,7 @@ def update_podcast(self, podcast_id, explicit_request=False):
 
 @shared_task
 def update_podcasts_episodes(explicit_request=False):
-    # logger.info("Request to update podcasts episodes")
+    # XXX: Log update podcast request?
     if explicit_request:
         logger.info({"event_type": "podcast_update",
             "message": "explicit update request recieved (for all rss)",
@@ -106,6 +106,4 @@ def update_podcasts_episodes(explicit_request=False):
     for task_group in task_groups:
         initial_chain = initial_chain | task_group
 
-    # result = initial_chain | process_parsing_results.s()
     initial_chain.apply_async()
-

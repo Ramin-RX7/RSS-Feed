@@ -43,7 +43,7 @@ class BaseNotification(ABC):
         Useful for situations where multiple notifications can be sent through one connection.
         By default runs self.send_bulk(users)
         """
-        return self.send_all(users)  # ? or raise NotImplementedError
+        return self.send_all(users)  # XXX: or raise NotImplementedError
 
     def create_user_notification(self, user):
         """Create notification for given user"""
