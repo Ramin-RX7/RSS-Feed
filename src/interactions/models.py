@@ -50,4 +50,4 @@ class Notification(BaseModel):
 class UserNotification(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
-    # TODO: is_received & is_read
+    # TODO: is_received & is_read columns

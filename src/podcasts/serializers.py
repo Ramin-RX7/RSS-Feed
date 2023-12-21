@@ -27,7 +27,6 @@ class PodcastEpisodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PodcastEpisode
         exclude = (
-            # "id",
             "rss",
             "created_at",
             "updated_at",

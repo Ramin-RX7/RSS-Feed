@@ -20,11 +20,12 @@ def divide_tasks(tasks, n):
 class BasePodcastTask(Task):
     autoretry_for = (Exception,)
     max_retries = CELERY_MAX_RETRY
-    # retry_backoff_max = 32
-    # default_retry_delay = 1
     retry_backoff = True  # 1
     retry_jitter = False
     acks_late = True
+    # Keep code below commented for future logic changes
+    # retry_backoff_max = 32
+    # default_retry_delay = 1
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         error_name = type(exc).__name__
@@ -64,7 +65,7 @@ class BasePodcastTask(Task):
 
 @shared_task(base=BasePodcastTask, bind=True)
 def update_podcast(self, podcast_id, explicit_request=False):
-    # self.request.retries
+    # XXX: Also check self.request.retries for simpler logic
     request_type = "explicit" if explicit_request else "scheduled"
     logger.info({"event_type": "podcast_update",
         "message": f"{request_type} update request recieved",

@@ -49,10 +49,10 @@ class PodcastMainFields(models.Model):
 
     category = models.CharField(max_length=75, null=True, blank=True)
     summary = models.TextField(blank=True, null=True)
-    image = models.CharField(max_length=300, null=True, blank=True)  # URLField
+    image = models.CharField(max_length=300, null=True, blank=True)  # XXX: URLField?
     host = models.CharField(max_length=50, null=True, blank=True)
     keywords = models.TextField(null=True, blank=True)
-    explicit = models.CharField(max_length=100, null=True, blank=True)  # Boolean field
+    explicit = models.CharField(max_length=100, null=True, blank=True)  # XXX: Boolean field
     copyright = models.CharField(max_length=100, null=True, blank=True)
     language = models.CharField(max_length=25, null=True, blank=True)
     link = models.URLField(null=True, blank=True)
@@ -76,7 +76,6 @@ class PodcastRSS(BaseModel):
     def save(self, **kwargs):
         if not self.pk:
             return self.save_from_scratch()
-            # raise SystemError()
         return super().save()
 
     def save_from_scratch(self):
@@ -102,16 +101,17 @@ class PodcastEpisode(BaseModel):
     # Required fields
     title = models.CharField(max_length=150)
     duration = models.PositiveIntegerField()
-    audio_file = models.CharField(max_length=300)  # URLField
+    audio_file = models.CharField(max_length=300)  # XXX: URLField
     publish_date = models.PositiveIntegerField()
 
     # Optional fields
-    explicit = models.CharField(max_length=100, blank=True, null=True)  # Boolean field
+    explicit = models.CharField(max_length=100, blank=True, null=True)  # XXX: Boolean field
     summary = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     keywords = models.CharField(max_length=150, null=True, blank=True)
-    image = models.CharField(max_length=300, null=True, blank=True)  # URLField
+    image = models.CharField(max_length=300, null=True, blank=True)  # XXX: URLField
 
     # XXX: add guid field?
+
     def __str__(self) -> str:
         return f"{self.rss.main_fields.title} - {self.title}"

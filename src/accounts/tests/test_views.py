@@ -119,6 +119,7 @@ class LogoutViewTest(TestCase):
             HTTP_AUTHORIZATION=f"Token {self.access_token}",
         )
         self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
+        # Bug: The test below does not work properly
         # self.assertIsNone(auth_cache.get(f"{self.user.id}|{self.access_token['jti']}"))
 
     def test_logout_with_invalid_access_token(self):

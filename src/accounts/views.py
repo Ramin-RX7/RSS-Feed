@@ -126,7 +126,7 @@ class UserLoginView(APIView):
         user = LoginAuthBackend().authenticate(
             request, username=username, password=password
         )
-        if user is None:  # ? should we save invalid login attempts?
+        if user is None:  # ? should we log invalid login attempts?
             return Response(
                 {"message": _("Invalid Credentials")},
                 status=status.HTTP_400_BAD_REQUEST,

@@ -47,8 +47,9 @@ class BaseNotification(ABC):
 
     def create_user_notification(self, user):
         """Create notification for given user"""
-        # get_or_create_user_notification (using self.usernotifications: dict[user_id, UserNotification])
         return UserNotification(user=user, notification=self.notification)
+        # TODO: get_or_create_user_notification
+        #  (using self.usernotifications: dict[user_id, UserNotification])
 
     def get_notification_data(self):
         """Get data from self.notification.data"""
