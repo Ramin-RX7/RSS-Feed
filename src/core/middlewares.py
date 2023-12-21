@@ -1,9 +1,8 @@
 import logging
 
 from django.urls import resolve
-from django.utils import timezone
 
-from core.utils import get_request_data,get_nows
+from core.utils import get_request_data, get_nows
 
 
 

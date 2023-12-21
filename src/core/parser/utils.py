@@ -4,7 +4,6 @@ from core.lib import xmltodict
 
 
 
-
 def get_rss_content(rss_object) -> dict:
     url = rss_object.url
     response = requests.get(url)

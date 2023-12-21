@@ -1,9 +1,7 @@
-from django.db import models,transaction
+from django.db import models, transaction
 
 from core.models import BaseModel
 from core.parser import *
-
-
 
 
 class PodcastEpisodePaths(models.Model):
@@ -18,7 +16,6 @@ class PodcastEpisodePaths(models.Model):
     description = models.CharField(max_length=100, null=True, blank=True)
     keywords = models.CharField(max_length=100, null=True, blank=True)
     image = models.CharField(max_length=100, null=True, blank=True)
-    # guests = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'"{self.route_name}" episode router'
@@ -44,7 +41,6 @@ class PodcastRSSPaths(models.Model):
         return f'"{self.route_name}" main field router'
 
 
-
 class PodcastMainFields(models.Model):
     # RSS Main fields
     title = models.CharField(max_length=50)
@@ -53,14 +49,13 @@ class PodcastMainFields(models.Model):
 
     category = models.CharField(max_length=75, null=True, blank=True)
     summary = models.TextField(blank=True, null=True)
-    image = models.CharField(max_length=300, null=True, blank=True)      # URLField
+    image = models.CharField(max_length=300, null=True, blank=True)  # XXX: URLField?
     host = models.CharField(max_length=50, null=True, blank=True)
     keywords = models.TextField(null=True, blank=True)
-    explicit = models.CharField(max_length=100, null=True, blank=True)   # Boolean field
+    explicit = models.CharField(max_length=100, null=True, blank=True)  # XXX: Boolean field
     copyright = models.CharField(max_length=100, null=True, blank=True)
     language = models.CharField(max_length=25, null=True, blank=True)
     link = models.URLField(null=True, blank=True)
-
 
 
 class PodcastRSS(BaseModel):
@@ -73,7 +68,6 @@ class PodcastRSS(BaseModel):
     # Episode fields xml path
     episode_attributes_path = models.ForeignKey(PodcastEpisodePaths, models.CASCADE)
 
-
     def update_episodes(self):
         parser = EpisodeXMLParser(self, PodcastEpisode)
         new_episodes = parser.update_episodes()
@@ -82,7 +76,6 @@ class PodcastRSS(BaseModel):
     def save(self, **kwargs):
         if not self.pk:
             return self.save_from_scratch()
-            # raise SystemError()
         return super().save()
 
     def save_from_scratch(self):
@@ -102,21 +95,23 @@ class PodcastRSS(BaseModel):
         return f"{self.name} ({self.main_fields.title})"
 
 
-
 class PodcastEpisode(BaseModel):
     rss = models.ForeignKey(PodcastRSS, on_delete=models.CASCADE)
+
     # Required fields
     title = models.CharField(max_length=150)
     duration = models.PositiveIntegerField()
-    audio_file = models.CharField(max_length=300)     # URLField
+    audio_file = models.CharField(max_length=300)  # XXX: URLField
     publish_date = models.PositiveIntegerField()
+
     # Optional fields
-    explicit = models.CharField(max_length=100, blank=True, null=True)   # Boolean field
-    summary = models.TextField(null=True,blank=True)
-    description = models.TextField(null=True,blank=True)
+    explicit = models.CharField(max_length=100, blank=True, null=True)  # XXX: Boolean field
+    summary = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     keywords = models.CharField(max_length=150, null=True, blank=True)
-    image = models.CharField(max_length=300, null=True, blank=True)      # URLField
-    # guests = models.CharField(max_length=100, null=True, blank=True)
-    # guid
+    image = models.CharField(max_length=300, null=True, blank=True)  # XXX: URLField
+
+    # XXX: add guid field?
+
     def __str__(self) -> str:
         return f"{self.rss.main_fields.title} - {self.title}"

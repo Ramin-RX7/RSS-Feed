@@ -6,11 +6,8 @@ from config.settings import RABBIT_URL
 
 
 
-
 def publish_podcast_update(data):
     return RabbitMQ.publish_s("podcast_update", data)
-
-
 
 
 class RabbitMQ:
@@ -22,6 +19,7 @@ class RabbitMQ:
     self.properties -> publish properties
     context manager return -> self
     """
+
     def __init__(self, *args, **kwargs):
         self.con = pika.BlockingConnection(RABBIT_URL)
         self.ch = self.con.channel()
@@ -36,14 +34,20 @@ class RabbitMQ:
         return True
 
     def publish(self, queue, data):
-        self.ch.basic_publish(exchange="", routing_key=queue, body=json.dumps(data), properties=self.properties)
-
+        self.ch.basic_publish(
+            exchange="",
+            routing_key=queue,
+            body=json.dumps(data),
+            properties=self.properties,
+        )
 
     @staticmethod
     def publish_s(queue, data):
         con = pika.BlockingConnection(RABBIT_URL)
         properties = pika.BasicProperties("...")
         ch = con.channel()
-        ch.basic_publish(exchange='', routing_key=queue, body=json.dumps(data), properties=properties)
+        ch.basic_publish(
+            exchange="", routing_key=queue, body=json.dumps(data), properties=properties
+        )
         ch.close()
         con.close()

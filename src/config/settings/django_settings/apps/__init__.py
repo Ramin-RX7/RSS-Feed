@@ -5,14 +5,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "debug_toolbar",
-    'drf_spectacular',
-    'django_celery_beat',
-    'rosetta',
-    'minio_storage',
-
+    "drf_spectacular",
+    "django_celery_beat",
+    "rosetta",
+    "minio_storage",
     "core",
     "accounts",
     "interactions",

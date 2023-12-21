@@ -17,15 +17,13 @@ ALLOWED_HOSTS = ["*"]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    'django.middleware.locale.LocaleMiddleware',
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-
     "core.middlewares.APICallLogMiddleware",
 ]
 
@@ -36,7 +34,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR/"templates"],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -81,23 +79,22 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
-# STATIC_ROOT = BASE_DIR/'staticfiles' # READMORE
-STATIC_ROOT = './staticfiles/'
+STATIC_URL = "static/"
+STATIC_ROOT = "./staticfiles/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-MEDIA_ROOT = BASE_DIR / 'media'
-MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
 
 LOCALE_PATHS = [
-    BASE_DIR / 'locale/',
+    BASE_DIR / "locale/",
 ]
 LANGUAGES = (
-    ('en', _('English')),
-    ('fr', _('French')),
-    ('es', _('Spanish')),
+    ("en", _("English")),
+    ("fr", _("French")),
+    ("es", _("Spanish")),
 )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

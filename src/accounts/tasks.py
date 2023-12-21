@@ -8,8 +8,8 @@ from django.urls import reverse_lazy
 
 @shared_task
 def send_reset_password_email(receiver, code):
-    subject = 'RSS-Feed password reset'
-    reset_password_link = reverse_lazy("reset_password", kwargs={"code":code})
+    subject = "RSS-Feed password reset"
+    reset_password_link = reverse_lazy("reset_password", kwargs={"code": code})
     link = f"{settings.BASE_URL}{reset_password_link}"
     message = (
         f"a password reset request has been sent to us in RSS-Feed using your email\n"

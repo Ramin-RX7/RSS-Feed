@@ -5,7 +5,6 @@ from ..models import User
 
 
 class LoginAuthBackend(ModelBackend):
-
     def authenticate(self, request, username=None, password=None, **kwargs):
         user_qs = User.objects.filter(username=username)
         if user_qs.exists():
