@@ -1,4 +1,4 @@
-from django.urls import path,re_path
+from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import *
@@ -6,8 +6,6 @@ from .views import *
 
 
 urlpatterns = format_suffix_patterns([
-    path("test/", test, name="test"),
-
     path('podcasts/', PodcastListView.as_view(), name="podcast_list"),
     path('podcast/<int:pk>/', PodcastDetailView.as_view({"get":"get"}), name="podcast_detail"),
 
@@ -20,7 +18,6 @@ urlpatterns = format_suffix_patterns([
     path('podcast/<int:pk>/update/', PodcastUpdateView.as_view({"post":"update_single"}), name="podcast_update_single"),
     path('podcasts/update/', PodcastUpdateView.as_view({"post":"update_all"}), name="podcast_update_all"),
 
-
     path('podcast/<int:rss_pk>/episodes/', PodcastEpisodeListView.as_view(), name="podcast_episodes"),
     path('podcast/<int:rss_pk>/episode/<int:pk>/', EpisodeDetailView.as_view({"get":"get"}), name="episode_detail"),
 
@@ -29,7 +26,6 @@ urlpatterns = format_suffix_patterns([
     path('podcast/episode/<int:pk>/likes/', EpisodeDetailView.as_view({"get":"likes"}), name="episode_likes"),
     path('podcast/episode/<int:pk>/comment/', EpisodeDetailView.as_view({"post":"comment"}), name="episode_comment"),
     path('podcast/episode/<int:pk>/comments/', EpisodeDetailView.as_view({"get":"comments"}), name="episode_comments"),
-
 
     path('recommended/<str:method>/', PodcastRecommendationView.as_view(), name="recommendation"),
 
